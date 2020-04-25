@@ -1,6 +1,5 @@
 package clickomania
 
-
 object NextMove {
 
   def main(args: Array[String]) {
@@ -9,8 +8,9 @@ object NextMove {
     val Columns = tokens(1).toInt
     val Colours = tokens(2).toInt
 
-    val Grid = readGridList(Rows, List())
-    getNextMove(Grid)
+    val grid = readGridList(Rows, List())
+    val moves_list = getNextMove(grid)
+    println((19 - moves_list.head._3.head._2.head._2.head) + " " + moves_list.head._3.head._2.head._1)
   }
 
   type BlockSquares = List[(Int, List[Int])]
@@ -21,135 +21,76 @@ object NextMove {
   type Moves = (Int, List[Int], BlockList)
   type MovesList = List[Moves]
 
-  def getNextMove(Grid: List[List[Char]]): Boolean = {
-    val block_list = getBlockList(0, Grid, List())
-
-    var moved = false
-    val grid_score = blockScoreList(getBlockList(0, Grid, List()))
-    val moves_scores = List(grid_score, grid_score, grid_score, grid_score, grid_score)
+  def getNextMove(grid: List[List[Char]]): MovesList = {
+    val grid_score = blockScoreList(getBlockList(0, grid, List()))
+    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score)
 
     var buffer = 3
-    var moves_depth1 = 5
-    var moves_depth2 = 2
-    var moves_depth3 = 2
-    var moves_depth4 = 2
-    var moves_width = 5
-    var keep1 = 25
-    var keep2 = 25
-    var keep3 = 25
-    var keep4 = 50
+    var movesDepth = List(5, 2, 2, 2)
+    var keepVert = 25
+    var keepHor = List(25, 25, 50)
+    val movesWidth = 5
 
     if (grid_score < 50) {
       buffer = 10
-      moves_depth2 = 4
-      moves_depth3 = 4
-      moves_depth4 = 3
-      keep1 = 40
-      keep2 = 35
-      keep3 = 35
+      movesDepth = List(5, 4, 4, 3)
+      keepVert = 40
+      keepHor = List(35, 35, 50)
     }
     else if (grid_score < 65) {
       buffer = 10
-      moves_depth2 = 4
-      moves_depth3 = 4
-      moves_depth4 = 3
-      keep1 = 35
-      keep2 = 35
-      keep3 = 35
+      movesDepth = List(5, 4, 4, 3)
+      keepVert = 35
+      keepHor = List(35, 35, 50)
     }
     else if (grid_score < 90) {
       buffer = 4
-      moves_depth2 = 4
-      moves_depth3 = 3
-      moves_depth4 = 3
-      keep1 = 35
-      keep2 = 35
-      keep3 = 35
+      movesDepth = List(5, 4, 3, 3)
+      keepVert = 35
+      keepHor = List(35, 35, 50)
     }
     else if (grid_score < 110) {
       buffer = 4
-      moves_depth2 = 3
-      moves_depth3 = 3
-      moves_depth4 = 3
-      keep1 = 35
-      keep2 = 35
-      keep3 = 35
+      movesDepth = List(5, 3, 3, 3)
+      keepVert = 35
+      keepHor = List(35, 35, 50)
     }
     else if (grid_score < 130) {
       buffer = 4
-      moves_depth2 = 3
-      moves_depth3 = 2
-      moves_depth4 = 2
-      keep1 = 30
+      movesDepth = List(5, 3, 2, 2)
+      keepVert = 30
+      keepHor = List(25, 25, 50)
     }
 
-    val moves_list = getBestMoveList(Grid, moves_depth1, moves_width, moves_scores, buffer, keep1)
+    val moves_list = getNextMoveHelper(grid,
+                                    getBestMoveList(grid, movesDepth.head, movesWidth, movesScores, buffer, keepVert),
+                                      movesScores, movesDepth.tail, movesWidth, buffer, keepHor, keepVert)
 
-    var moves_list_round2: MovesList = List()
-    var moves_list_round3: MovesList = List()
-    var moves_list_round4: MovesList = List()
+    return moves_list
+  }
 
-    if (moves_list.head._1 == 0) {
-      println((19 - moves_list.head._3.head._2.head._2.head) + " " + moves_list.head._3.head._2.head._1)
-      moved = true
-    }
-    else {
-      for (moves <- moves_list) {
-        moves_list_round2 = mergeMovesListMulti(keep2, moves._1, moves._3, moves_list_round2,
-          getBestMoveList(removeMovesFromGrid(Grid, moves._3),
-            moves_depth2, moves_width, moves_scores, buffer, keep1))
+  def getNextMoveHelper(grid: List[List[Char]], movesList: MovesList, movesScores: List[Int],
+                        movesDepth: List[Int], movesWidth: Int, buffer: Int,
+                        keepHor: List[Int], keepVert: Int): MovesList = {
 
-        if ((!moved) && (!moves_list_round2.isEmpty) && (moves_list_round2.head._1 == 0)) {
-          println((19 - moves_list_round2.head._3.head._2.head._2.head) + " " + moves_list_round2.head._3.head._2.head._1)
-          moved = true
-        }
-      }
-    }
-    if (!moved) {
-      if (moves_list_round2.isEmpty) {
-        println((19 - moves_list.head._3.head._2.head._2.head) + " " + moves_list.head._3.head._2.head._1)
-        moved = true
-      }
-      else {
-        for (moves <- moves_list_round2) {
-          moves_list_round3 = mergeMovesListMulti(keep3, moves._1, moves._3, moves_list_round3,
-            getBestMoveList(removeMovesFromGrid(Grid, moves._3),
-              moves_depth3, moves_width, moves_scores, buffer, keep1))
+    var movesListNext: MovesList = List()
 
-          if ((!moved) && (!moves_list_round3.isEmpty) && (moves_list_round3.head._1 == 0)) {
-            println((19 - moves_list_round3.head._3.head._2.head._2.head) + " " + moves_list_round3.head._3.head._2.head._1)
-            moved = true
-          }
-        }
-      }
-    }
-    if (!moved) {
-      if (moves_list_round3.isEmpty) {
-        println((19 - moves_list_round2.head._3.head._2.head._2.head) + " " + moves_list_round2.head._3.head._2.head._1)
-        moved = true
-      }
-      else {
-        for (moves <- moves_list_round2) {
-          moves_list_round4 = mergeMovesListMulti(keep4, moves._1, moves._3, moves_list_round4,
-            getBestMoveList(removeMovesFromGrid(Grid, moves._3),
-              moves_depth4, moves_width, moves_scores, buffer, keep1))
+    for (moves <- movesList) {
+      movesListNext = mergeMovesListMulti(keepHor.head, moves._1, moves._3, movesListNext,
+                              getBestMoveList(removeMovesFromGrid(grid, moves._3),
+                                movesDepth.head, movesWidth, movesScores, buffer, keepVert))
 
-          if ((!moved) && (!moves_list_round4.isEmpty) && (moves_list_round4.head._1 == 0)) {
-            println((19 - moves_list_round4.head._3.head._2.head._2.head) + " " + moves_list_round4.head._3.head._2.head._1)
-            moved = true
-          }
-        }
-      }
+      if((!movesListNext.isEmpty) && (movesListNext.head._1 == 0))
+        return movesListNext
     }
-    if (!moved) {
-      if (moves_list_round4.isEmpty) {
-        println((19 - moves_list_round3.head._3.head._2.head._2.head) + " " + moves_list_round3.head._3.head._2.head._1)
-      }
-      else {
-        println((19 - moves_list_round4.head._3.head._2.head._2.head) + " " + moves_list_round4.head._3.head._2.head._1)
-      }
-    }
-    return true
+
+    if(movesListNext.isEmpty)
+      return movesList
+    else if(movesDepth.tail.isEmpty)
+      return movesListNext
+    else
+      return getNextMoveHelper(grid, movesListNext, movesScores, movesDepth.tail, movesWidth, buffer,
+                              keepHor.tail, keepVert)
   }
 
   def getBestMoveList(G: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
@@ -168,7 +109,7 @@ object NextMove {
 
         best_move_list = putInMoveList(moves_width, new_block_score, block, best_move_list)
 
-        if (new_block_score == 0) return (best_move_list)
+        if (new_block_score == 0) return best_move_list
       }
     }
 
@@ -178,8 +119,8 @@ object NextMove {
         else new_moves_scores = updateMoveScores(moves_list_this.head._2, move_scores)
 
         if (b_score < new_moves_scores.head + buffer) {
-          var moves_list_next = getBestMoveList(removeBlockFromList(G, blocks.head),
-            moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
+          val moves_list_next = getBestMoveList(removeBlockFromList(G, blocks.head),
+                              moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
           moves_list_this = mergeMovesListMulti(keep, b_score, blocks, moves_list_this, moves_list_next)
 
           if ((!moves_list_this.isEmpty) && (moves_list_this.head._1 == 0)) return (moves_list_this)
@@ -189,15 +130,14 @@ object NextMove {
       else return (moves_list_this)
     }
     else
-      return (best_move_list)
+      return best_move_list
   }
 
   def updateMoveScores(move_scoresA: List[Int], move_scoresB: List[Int]): List[Int] = move_scoresA match {
     case List() => move_scoresB
-    case s :: sL => {
+    case s :: sL =>
       if (s < move_scoresB.head) s :: updateMoveScores(sL, move_scoresB.tail)
       else move_scoresB.head :: updateMoveScores(sL, move_scoresB.tail)
-    }
   }
 
   def blockScoreList(new_block_list: BlockList): Int = new_block_list match {
@@ -239,8 +179,10 @@ object NextMove {
     }
   }
 
-  // moves_listB is the list coming from further depth, so must add current block and its score to the elements as they
-  //  are merged into the return value
+  // moves_listB is the list coming from further depth, so must add current block and its score to the
+  // elements as they are merged into the return value
+  // What do I do about equal scores?  do i care if they aren't 0?
+  
   def mergeMovesListMulti(width: Int, score: Int, block_list: BlockList,
                           moves_listA: MovesList, moves_listB: MovesList): MovesList = moves_listA match {
     case List() => {
