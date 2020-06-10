@@ -39,5 +39,23 @@ object GridSetUp {
         List('O', 'B', 'B', 'G', 'O', 'R', 'V', 'V', 'V', 'Y', 'R', 'V', 'Y', 'O', 'Y', 'Y', 'G', 'B', 'R', 'R'),
         List('R', 'Y', 'O', 'Y', 'B', 'G', 'V', 'O', 'G', 'O', 'R', 'Y', 'O', 'B', 'G', 'V', 'B', 'B', 'G', 'O'),
         List('O', 'B', 'G', 'G', 'V', 'V', 'Y', 'B', 'V', 'R', 'V', 'B', 'Y', 'V', 'B', 'R', 'G', 'B', 'G', 'B'))
+
+    case 10 => return List(
+        List('V', 'O', 'O', 'V', 'G', 'C'),
+        List('B', 'V', 'G', 'C'),
+        List('B', 'V', 'V', 'O'),
+        List('B'))
+
+    case 25 => return List(
+        List('V', 'R', 'V', 'G', 'B', 'R', 'V', 'O', 'V', 'V', 'Y', 'B'),
+        List('B', 'O', 'G', 'O', 'G', 'O', 'G'),
+        List('V', 'Y', 'R', 'V', 'Y', 'R', 'Y', 'O'),
+        List('V', 'Y', 'O', 'O', 'R', 'O'),
+        List('B', 'Y', 'V', 'Y', 'Y', 'Y', 'V', 'V'),
+        List('V', 'B', 'V', 'G', 'R', 'O', 'V', 'B', 'O', 'Y', 'G', 'B'),
+        List('R', 'G', 'O', 'G', 'O', 'Y', 'G', 'Y', 'Y', 'B', 'Y', 'R', 'G'),
+        List('Y', 'R', 'V', 'Y', 'O', 'Y', 'Y', 'G', 'B', 'R', 'R'),
+        List('V', 'O', 'G', 'O', 'R', 'Y', 'O', 'B', 'G', 'V', 'B', 'B', 'G', 'O'),
+        List('B', 'G', 'G', 'V', 'V', 'Y', 'B', 'V', 'R', 'V', 'B', 'Y', 'V', 'B', 'R', 'G', 'B', 'G', 'B'))
   }
 }

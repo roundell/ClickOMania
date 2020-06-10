@@ -22,44 +22,43 @@ object NextMove {
   type MovesList = List[Moves]
 
   def getNextMove(grid: List[List[Char]]): MovesList = {
-    val grid_score = blockScoreList(getBlockList(0, grid, List()))
-    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score)
+    val blockList = getBlockList(0, grid, List())
+    val grid_score = blockScoreList(blockList)
+    val mBlockCount = multiBlockCount(blockList, 0)
+
+    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score)
 
     var buffer = 3
     var movesDepth = List(5, 2, 2, 2)
     var keepVert = 25
-    var keepHor = List(25, 25, 50)
+    var keepHor = List(25, 25, 25, 50)
     val movesWidth = 5
 
-    if (grid_score < 50) {
+
+    if (mBlockCount < 15) {
       buffer = 10
       movesDepth = List(5, 4, 4, 3)
-      keepVert = 40
-      keepHor = List(35, 35, 50)
+      keepHor = List(40, 35, 35, 50)
     }
-    else if (grid_score < 65) {
+    else if (mBlockCount < 20) {
       buffer = 10
       movesDepth = List(5, 4, 4, 3)
-      keepVert = 35
-      keepHor = List(35, 35, 50)
+      keepHor = List(35, 35, 35, 50)
     }
-    else if (grid_score < 90) {
+    else if (mBlockCount < 25) {
       buffer = 4
       movesDepth = List(5, 4, 3, 3)
-      keepVert = 35
-      keepHor = List(35, 35, 50)
+      keepHor = List(35, 35, 35, 50)
     }
-    else if (grid_score < 110) {
+    else if (mBlockCount < 30) {
       buffer = 4
       movesDepth = List(5, 3, 3, 3)
-      keepVert = 35
-      keepHor = List(35, 35, 50)
+      keepHor = List(35, 35, 35, 50)
     }
-    else if (grid_score < 130) {
+    else if (mBlockCount < 35) {
       buffer = 4
       movesDepth = List(5, 3, 2, 2)
-      keepVert = 30
-      keepHor = List(25, 25, 50)
+      keepHor = List(30, 25, 25, 50)
     }
 
     val moves_list = getNextMoveHelper(grid,
@@ -72,15 +71,17 @@ object NextMove {
   def getNextMoveHelper(grid: List[List[Char]], movesList: MovesList, movesScores: List[Int],
                         movesDepth: List[Int], movesWidth: Int, buffer: Int,
                         keepHor: List[Int], keepVert: Int): MovesList = {
+    if(movesDepth.isEmpty) return movesList
 
     var movesListNext: MovesList = List()
+    var movesScoresNext = movesScores
 
     for (moves <- movesList) {
-      movesListNext = mergeMovesListMulti(keepHor.head, moves._1, moves._3, movesListNext,
-                              getBestMoveList(removeMovesFromGrid(grid, moves._3),
-                                movesDepth.head, movesWidth, movesScores, buffer, keepVert))
+      movesListNext = mergeMovesListMulti(keepHor.head, moves._1, moves._2, moves._3, movesListNext,
+        getBestMoveList(removeMovesFromGrid(grid, moves._3),
+          movesDepth.head, movesWidth, movesScoresNext, buffer, keepVert))
 
-      if((!movesListNext.isEmpty) && (movesListNext.head._1 == 0))
+      if ((movesListNext.nonEmpty) && (movesListNext.head._1 == 0))
         return movesListNext
     }
 
@@ -95,12 +96,13 @@ object NextMove {
 
   def getBestMoveList(G: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
                       buffer: Int, keep: Int): MovesList = {
-    val block_list = getBlockList(0, G, List())
+    val blockList = getBlockList(0, G, List())
     var best_move_list: MovesList = List()
     var moves_list_this: MovesList = List()
     var new_moves_scores: List[Int] = List()
 
-    for (block <- block_list) {
+
+    for (block <- blockList) {
       if (!isSingleSquare(block._2)) {
         // multi-square block
         val new_grid = removeBlockFromList(G, block)
@@ -121,13 +123,13 @@ object NextMove {
         if (b_score < new_moves_scores.head + buffer) {
           val moves_list_next = getBestMoveList(removeBlockFromList(G, blocks.head),
                               moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
-          moves_list_this = mergeMovesListMulti(keep, b_score, blocks, moves_list_this, moves_list_next)
+          moves_list_this = mergeMovesListMulti(keep, b_score, scores, blocks, moves_list_this, moves_list_next)
 
-          if ((!moves_list_this.isEmpty) && (moves_list_this.head._1 == 0)) return (moves_list_this)
+          if ((!moves_list_this.isEmpty) && (moves_list_this.head._1 == 0)) return moves_list_this
         }
       }
-      if (moves_list_this.isEmpty) return (best_move_list)
-      else return (moves_list_this)
+      if (moves_list_this.isEmpty) return best_move_list
+      else return moves_list_this
     }
     else
       return best_move_list
@@ -136,23 +138,47 @@ object NextMove {
   def updateMoveScores(move_scoresA: List[Int], move_scoresB: List[Int]): List[Int] = move_scoresA match {
     case List() => move_scoresB
     case s :: sL =>
-      if (s < move_scoresB.head) s :: updateMoveScores(sL, move_scoresB.tail)
-      else move_scoresB.head :: updateMoveScores(sL, move_scoresB.tail)
+      if(move_scoresB.nonEmpty) {
+        if (s < move_scoresB.head) s :: updateMoveScores(sL, move_scoresB.tail)
+        else move_scoresB.head :: updateMoveScores(sL, move_scoresB.tail)
+      }
+      else  move_scoresA
+  }
+  def updateMovesScoresWith0or1(movesScores: List[Int], buffer: Int): List[Int] = movesScores match {
+    case List() => List()
+    case s :: sl =>
+      if(s < 2) (s - buffer) :: sl
+      else      s :: updateMovesScoresWith0or1(sl, buffer)
   }
 
-  def blockScoreList(new_block_list: BlockList): Int = new_block_list match {
-    case List() => 0
-    case b :: bl =>
-      if (isSingleSquare(b._2)) 2 + blockScoreList(bl) // single square is worst
-      //else if(isSingleColumn(b._2))   1 + blockScoreList(bl)  // single column is the best (cannot be destroyed)
-      else 1 + blockScoreList(bl) // multi column block aint so bad
+  def blockScoreList(blockList: BlockList): Int = {
+    blockScoreListHelper(blockList, Map(), 0)
   }
 
-  def multiBlockCount(block_list: BlockList): Int = block_list match {
-    case List() => 0
+  def blockScoreListHelper(blockList: BlockList, colourSafe: Map[Char,Int], score: Int): Int = blockList match {
+    case List() => score + (100 * colourSafe.foldLeft(0)(_+_._2))
     case b :: bl =>
-      if (isSingleSquare(b._2)) multiBlockCount(bl)
-      else 1 + multiBlockCount(bl)
+      if (isSingleSquare(b._2)) { // single square is worst
+        if(colourSafe.contains(b._1))
+          blockScoreListHelper(bl, colourSafe + (b._1 -> 0), score + 2)
+        else
+          blockScoreListHelper(bl, colourSafe + (b._1 -> 1), score + 2)
+      }
+      else  blockScoreListHelper(bl, colourSafe + (b._1 -> 0), score + 1) // multi column block aint so bad
+  }
+
+  def multiBlockCount(blockList: BlockList, multiCount: Int): Int = blockList match {
+    case List() => multiCount
+    case b :: bl =>
+      if (isSingleSquare(b._2)) multiBlockCount(bl, multiCount)
+      else multiBlockCount(bl, 1 + multiCount)
+  }
+
+  def singleBlockCount(blockList: BlockList, singleCount: Int): Int = blockList match {
+    case List() => singleCount
+    case b :: bl =>
+      if (isSingleSquare(b._2)) singleBlockCount(bl, 1 + singleCount)
+      else singleBlockCount(bl, singleCount)
   }
 
   def isSingleSquare(new_block_sq: BlockSquares): Boolean = {
@@ -183,21 +209,21 @@ object NextMove {
   // elements as they are merged into the return value
   // What do I do about equal scores?  do i care if they aren't 0?
   
-  def mergeMovesListMulti(width: Int, score: Int, block_list: BlockList,
+  def mergeMovesListMulti(width: Int, score: Int, scores: List[Int], block_list: BlockList,
                           moves_listA: MovesList, moves_listB: MovesList): MovesList = moves_listA match {
     case List() => {
       if ((width == 0) || (moves_listB.isEmpty))
         List()
-      else (moves_listB.head._1, score :: moves_listB.head._2, block_list ::: moves_listB.head._3) ::
-        mergeMovesListMulti(width - 1, score, block_list, List(), moves_listB.tail)
+      else (moves_listB.head._1, scores ::: moves_listB.head._2, block_list ::: moves_listB.head._3) ::
+        mergeMovesListMulti(width - 1, score, scores, block_list, List(), moves_listB.tail)
     }
     case m :: mL => {
       if (width == 0) List()
       else {
         if ((moves_listB.isEmpty) || (m._1 <= moves_listB.head._1))
-          m :: mergeMovesListMulti(width - 1, score, block_list, mL, moves_listB)
-        else (moves_listB.head._1, score :: moves_listB.head._2, block_list ::: moves_listB.head._3) ::
-          mergeMovesListMulti(width - 1, score, block_list, moves_listA, moves_listB.tail)
+          m :: mergeMovesListMulti(width - 1, score, scores, block_list, mL, moves_listB)
+        else (moves_listB.head._1, scores ::: moves_listB.head._2, block_list ::: moves_listB.head._3) ::
+          mergeMovesListMulti(width - 1, score, scores, block_list, moves_listA, moves_listB.tail)
       }
     }
   }
