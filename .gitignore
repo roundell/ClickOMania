@@ -1,0 +1,13 @@
+*.log
+
+
+# sbt specific
+# sbt specific
+.cache/
+.history/
+.lib/
+.lib/
+dist/*
+dist/*
+target/
+target/
