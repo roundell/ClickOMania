@@ -3,14 +3,16 @@
 ## Origin of the Project
 This project was created as a solution to HackerRank's "Artificial Intelligence > Bot Building > Click-o-Mania" challenge.  The solution can be copy pasted from NextMove.scala using the instructions in the comments at the top of the file.  HackerRank has an excellent description of the challenge [here](https://www.hackerrank.com/challenges/click-o-mania/problem), including some pictures of a simple grid with moves.  I would add one important point: there is a timeout across all HackerRank challenges depending on the language used, which is an essential consideration for this challenge in particular.  Here is a part of the challenge from HackerRank:
 
-```Clickomania is a 1-player game consisting of a rectangular grid of square blocks, 
+```
+Clickomania is a 1-player game consisting of a rectangular grid of square blocks, 
 each colored in one of k colors. Adjacent blocks horizontally and vertically of 
 the same color are considered to be a part of the same group. A move selects a 
 group containing at least two blocks and removes those blocks, followed by two 
 "falling" rules;
 
   1. Any blocks remaining above the holes created, fall down through the same column.
-  2. Any empty columns are removed by sliding the succeeding columns left.```
+  2. Any empty columns are removed by sliding the succeeding columns left.
+```
 
 So in my own words, you have a 20x10 grid filled with two (simpler) to six (more complicated) different colours of square.  There are single squares, not touching any other squares of the same colour.  You cannot remove those directly.  You may only remove multi-squares.  The point is to remove multi-squares in a way such that all the single squares get joined to multi-squares before you run out of multi-squares to remove using the two "falling" rules above.  HackerRank's test will request the next move only, not the entire solution at once.
 
@@ -29,7 +31,7 @@ So then I implemented the solution in Scala with the grid as lists.  I devised a
 ### Major efficiencies:
 The grids start with 200 squares (10x20) and the five and six-colour test grids start with about 40 multi-blocks.  Without efficiencies, each iteration explodes in the number of grids to test.  The one I implemented from the start was only testing the best five new grids in the next iteration.  I later did some testing on this and found that increasing this to keeping the best ten made no difference in the next move chosen.  Five seemed like the magic number.
 
-Then there is a balance between the number of iterations forward before 
+Then there is a balance between the number of iterations forward before reducing the number of sequences to explore.  
 
 
 
