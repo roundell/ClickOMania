@@ -1,14 +1,21 @@
 package clickomania
 
+/** To execute the code in HACKERRANK:
+      1. set the language of the current buffer to Scala
+      2. copy this entire file below this comment block (must remove package declaration above)
+      3. rename object to "Solution"
+  **/
+
 object NextMove {
 
   def main(args: Array[String]) {
+
     val tokens = scala.io.StdIn.readLine.split(" ")
-    val Rows = tokens(0).toInt
+    val rows = tokens(0).toInt
     val Columns = tokens(1).toInt
     val Colours = tokens(2).toInt
 
-    val grid = readGridList(Rows, List())
+    val grid = readGridList(rows)
     val moves_list = getNextMove(grid)
     println((19 - moves_list.head._3.head._2.head._2.head) + " " + moves_list.head._3.head._2.head._1)
   }
@@ -228,10 +235,12 @@ object NextMove {
     }
   }
 
-  def readGridList(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
+  def readGridList(rows: Int): List[List[Char]] =
+    readGridListHelper(rows, zipGridListFirstLine(scala.io.StdIn.readLine().toList))
+
+  def readGridListHelper(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
     case 0 => grid_builder
-    case 20 => readGridList(rows - 1, zipGridListFirstLine(scala.io.StdIn.readLine().toList))
-    case _ => readGridList(rows - 1, zipGridListLine(grid_builder, scala.io.StdIn.readLine().toList))
+    case _ => readGridListHelper(rows - 1, zipGridListLine(grid_builder, scala.io.StdIn.readLine().toList))
   }
 
   def zipGridListLine(grid_builder: List[List[Char]], grid_line: List[Char]): List[List[Char]] = grid_line match {
