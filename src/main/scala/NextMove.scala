@@ -274,13 +274,20 @@ object NextMove {
       println(x.mkString)
   }
 
+  // This function initializes the set of functions which will return a list of all the blocks that make up a grid
+  //  This set of functions includes:
+  //  getBlockList, getBlockListRow, getBlockListColumn // functions to travel the grid square by square up the columns left to right
+  //  addSquare, addSquareHelper // functions to find the block(s) the square belongs to
+  //  makeListNewHoldTail, mergeTwoBlocksSquares, prependTwoLists // functions to add the squares to its block
+  def getBlockList(grid: List[List[Char]]): BlockList = getBlockListRow(0, grid, List())
+
   // This function chooses the next column from the grid, starting from left = column 0 and resetting row to bottom = 0
-  def getBlockList(c: Int, grid: List[List[Char]], block_list: BlockList): BlockList = grid match {
+  def getBlockListRow(c: Int, grid: List[List[Char]], block_list: BlockList): BlockList = grid match {
     case List() => block_list
-    case column :: grid_tail => getBlockList(c + 1, grid_tail, getBlockListColumn(c, 0, column, block_list))
+    case column :: grid_tail => getBlockListRow(c + 1, grid_tail, getBlockListColumn(c, 0, column, block_list))
   }
 
-  // This function chooses the next square (the next row up)
+  // This function chooses the next square in the column (the next row up)
   def getBlockListColumn(c: Int, r: Int, column: List[Char], block_list: BlockList): BlockList = column match {
     case List() => block_list
     case ch :: chL => getBlockListColumn(c, r + 1, chL, addSquare(c, r, ch, block_list))
