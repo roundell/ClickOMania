@@ -236,7 +236,7 @@ object NextMove {
   }
 
   def readGridList(rows: Int): List[List[Char]] =
-    readGridListHelper(rows, zipGridListFirstLine(scala.io.StdIn.readLine().toList))
+    readGridListHelper(rows - 1, zipGridListFirstLine(scala.io.StdIn.readLine().toList))
 
   def readGridListHelper(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
     case 0 => grid_builder
