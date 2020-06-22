@@ -14,7 +14,7 @@ group containing at least two blocks and removes those blocks, followed by two
   2. Any empty columns are removed by sliding the succeeding columns left.
 ```
 
-So in my own words, you have a 20x10 grid filled with two (simpler) to six (more complicated) different colours of square.  There are single squares, not touching any other squares of the same colour.  You cannot remove those directly.  You may only remove multi-squares.  The point is to remove multi-squares in a way such that all the single squares get joined to multi-squares before you run out of multi-squares to remove using the two "falling" rules above.  HackerRank's test will request the next move only, not the entire solution at once.
+So in my own words, you have a 20x10 grid filled with two (simpler) to six (more complicated) different colours of square.  There are single squares, not touching any other squares of the same colour, which you cannot remove directly.  You may only remove multi-square blocks.  The point is to remove multi-square blocks in a way such that all the single squares get joined to multi-square blocks before you run out of multi-square blocks to remove using the two "falling" rules above.  HackerRank's test will request the next move with each execution of your code and iterate by re-executing with the new grid until you have lost (no more multi-square blocks, invalid move, error, etc.) or won (all squares removed).  It will not request the entire solution at once.
 
 ## Reasoning of my Solution
 ### Kicking the tires
