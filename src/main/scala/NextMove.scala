@@ -8,32 +8,36 @@ package clickomania
 
 object NextMove {
 
-  def main(args: Array[String]) {
+  type BlockSquares = List[(Int, List[Int])]  // Squares are recorded by column then row: (c #, (r #s)), (c #2, (r #s)), ...
+  type Block = (Char, BlockSquares)           // Add above to the colour to completely define the block
+  type BlockList = List[Block]                // A list of blocks >> could be entire grid as blocks
+                                              //                  >> could be sequence of blocks removed from a grid
+  type Moves = (Int, List[Int], BlockList)    // Sequence of moves (Blocklist) with scores of each move (List[Int])
+                                              //    and final score (Int)
+  type MovesList = List[Moves]                // List of move sequences sorted by final scores: lowest (best) score first
 
+
+  def main(args: Array[String]) {
     val tokens = scala.io.StdIn.readLine.split(" ")
     val rows = tokens(0).toInt
-    val Columns = tokens(1).toInt
-    val Colours = tokens(2).toInt
+    // columns = tokens(1).toInt
+    //            Not needed since the readGrid function
+    //            does not require number of columns to be specified
+    // colours = tokens(2).toInt
+    //            At this time not used
 
-    val grid = readGridList(rows)
-    val moves_list = getNextMove(grid)
-    println((19 - moves_list.head._3.head._2.head._2.head) + " " + moves_list.head._3.head._2.head._1)
+    val grid = readGrid(rows)
+    val movesList = getNextMove(grid)
+    printNextMove(movesList)
   }
-
-  type BlockSquares = List[(Int, List[Int])]
-  // Squares are recorded by column then row (columns, (rows))
-  type Block = (Char, BlockSquares)
-  // Add above to the colour to completely define the block
-  type BlockList = List[Block]
-  type Moves = (Int, List[Int], BlockList)
-  type MovesList = List[Moves]
 
   def getNextMove(grid: List[List[Char]]): MovesList = {
     val blockList = getBlockList(0, grid, List())
     val grid_score = blockScoreList(blockList)
     val mBlockCount = multiBlockCount(blockList, 0)
 
-    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score, grid_score)
+    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score,
+      grid_score, grid_score, grid_score, grid_score, grid_score, grid_score)
 
     var buffer = 3
     var movesDepth = List(5, 2, 2, 2)
@@ -235,28 +239,32 @@ object NextMove {
     }
   }
 
-  def readGridList(rows: Int): List[List[Char]] =
-    readGridListHelper(rows - 1, zipGridListFirstLine(scala.io.StdIn.readLine().toList))
+  def readGrid(rows: Int): List[List[Char]] =
+    readGridHelper(rows - 1, zipGridFirstLine(scala.io.StdIn.readLine().toList))
 
-  def readGridListHelper(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
+  def readGridHelper(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
     case 0 => grid_builder
-    case _ => readGridListHelper(rows - 1, zipGridListLine(grid_builder, scala.io.StdIn.readLine().toList))
+    case _ => readGridHelper(rows - 1, zipGridLine(grid_builder, scala.io.StdIn.readLine().toList))
   }
 
-  def zipGridListLine(grid_builder: List[List[Char]], grid_line: List[Char]): List[List[Char]] = grid_line match {
+  def zipGridLine(grid_builder: List[List[Char]], grid_line: List[Char]): List[List[Char]] = grid_line match {
     case List() => List()
     case x :: xs => {
-      if (x == '-') grid_builder.head :: zipGridListLine(grid_builder.tail, xs)
-      else (x :: grid_builder.head) :: zipGridListLine(grid_builder.tail, xs)
+      if (x == '-') grid_builder.head :: zipGridLine(grid_builder.tail, xs)
+      else (x :: grid_builder.head) :: zipGridLine(grid_builder.tail, xs)
     }
   }
 
-  def zipGridListFirstLine(grid_line: List[Char]): List[List[Char]] = grid_line match {
+  def zipGridFirstLine(grid_line: List[Char]): List[List[Char]] = grid_line match {
     case List() => List()
     case x :: xs => {
-      if (x == '-') List() :: zipGridListFirstLine(xs)
-      else (x :: List()) :: zipGridListFirstLine(xs)
+      if (x == '-') List() :: zipGridFirstLine(xs)
+      else (x :: List()) :: zipGridFirstLine(xs)
     }
+  }
+
+  def printNextMove(movesList: MovesList): Unit = {
+    println((19 - movesList.head._3.head._2.head._2.head) + " " + movesList.head._3.head._2.head._1)
   }
 
   def printGridList(grid: List[List[Char]]): Unit = grid match {
