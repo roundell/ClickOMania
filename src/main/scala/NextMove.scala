@@ -32,7 +32,7 @@ object NextMove {
   }
 
   def getNextMove(grid: List[List[Char]]): MovesList = {
-    val blockList = getBlockList(0, grid, List())
+    val blockList = getBlockList(grid)
     val grid_score = blockScoreList(blockList)
     val mBlockCount = multiBlockCount(blockList, 0)
 
@@ -105,9 +105,9 @@ object NextMove {
                               keepHor.tail, keepVert)
   }
 
-  def getBestMoveList(G: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
+  def getBestMoveList(grid: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
                       buffer: Int, keep: Int): MovesList = {
-    val blockList = getBlockList(0, G, List())
+    val blockList = getBlockList(grid)
     var best_move_list: MovesList = List()
     var moves_list_this: MovesList = List()
     var new_moves_scores: List[Int] = List()
@@ -116,8 +116,8 @@ object NextMove {
     for (block <- blockList) {
       if (!isSingleSquare(block._2)) {
         // multi-square block
-        val new_grid = removeBlockFromList(G, block)
-        val new_block_list = getBlockList(0, new_grid, List())
+        val newGrid = removeBlockFromList(grid, block)
+        val new_block_list = getBlockList(newGrid)
         val new_block_score = blockScoreList(new_block_list)
 
         best_move_list = putInMoveList(moves_width, new_block_score, block, best_move_list)
@@ -132,7 +132,7 @@ object NextMove {
         else new_moves_scores = updateMoveScores(moves_list_this.head._2, move_scores)
 
         if (b_score < new_moves_scores.head + buffer) {
-          val moves_list_next = getBestMoveList(removeBlockFromList(G, blocks.head),
+          val moves_list_next = getBestMoveList(removeBlockFromList(grid, blocks.head),
                               moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
           moves_list_this = mergeMovesListMulti(keep, b_score, scores, blocks, moves_list_this, moves_list_next)
 
@@ -274,23 +274,24 @@ object NextMove {
       println(x.mkString)
   }
 
-  // This function initializes the set of functions which will return a list of all the blocks that make up a grid
-  //  This set of functions includes:
+
+  // This set of functions includes:
   //  getBlockList, getBlockListRow, getBlockListColumn // functions to travel the grid square by square up the columns left to right
   //  addSquare, addSquareHelper // functions to find the block(s) the square belongs to
   //  makeListNewHoldTail, mergeTwoBlocksSquares, prependTwoLists // functions to add the squares to its block
+  // This function initializes the set of functions which will return a list of all the blocks that make up a grid
   def getBlockList(grid: List[List[Char]]): BlockList = getBlockListRow(0, grid, List())
 
   // This function chooses the next column from the grid, starting from left = column 0 and resetting row to bottom = 0
-  def getBlockListRow(c: Int, grid: List[List[Char]], block_list: BlockList): BlockList = grid match {
-    case List() => block_list
-    case column :: grid_tail => getBlockListRow(c + 1, grid_tail, getBlockListColumn(c, 0, column, block_list))
+  def getBlockListRow(col: Int, grid: List[List[Char]], blockList: BlockList): BlockList = grid match {
+    case List() => blockList
+    case column :: gridTail => getBlockListRow(col + 1, gridTail, getBlockListColumn(col, 0, column, blockList))
   }
 
   // This function chooses the next square in the column (the next row up)
-  def getBlockListColumn(c: Int, r: Int, column: List[Char], block_list: BlockList): BlockList = column match {
-    case List() => block_list
-    case ch :: chL => getBlockListColumn(c, r + 1, chL, addSquare(c, r, ch, block_list))
+  def getBlockListColumn(col: Int, row: Int, column: List[Char], blockList: BlockList): BlockList = column match {
+    case List() => blockList
+    case ch :: chL => getBlockListColumn(col, row + 1, chL, addSquare(col, row, ch, blockList))
   }
 
   // This function searches for, and puts the square in either of the two possible blocks that the square could belong to,
@@ -376,71 +377,71 @@ object NextMove {
   //                  > which must be prepended to the rest of the blocks
   //              non-matching:
   //                  > same as matching but don't merge this block in, just use block held from ii.
-  def addSquare(c: Int, r: Int, colour: Char, block_list: BlockList): BlockList = {
-    addSquareHelper(c, r, colour, false, false, false, block_list, List(), List((c, List(r))))
+  def addSquare(col: Int, row: Int, colour: Char, blockList: BlockList): BlockList = {
+    addSquareHelper(col, row, colour, false, false, false, blockList, List(), List((col, List(row))))
   }
 
-  def addSquareHelper(c: Int, r: Int, colour: Char, below: Boolean, left: Boolean, hold: Boolean, block_list: BlockList,
-                      b_list_hold: BlockList, new_block: BlockSquares): BlockList = block_list match {
-    case List() => makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
+  def addSquareHelper(col: Int, row: Int, colour: Char, below: Boolean, left: Boolean, hold: Boolean, blockList: BlockList,
+                      blockListHold: BlockList, newBlock: BlockSquares): BlockList = blockList match {
+    case List() => makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
     case b :: bL => {
-      if (b._2.head._1 == c) {
-        if ((!below) && (b._2.head._2.indexOf(r - 1) > -1)) {
-          if ((!left) && (!b._2.tail.isEmpty) && (b._2.tail.head._2.indexOf(r) > -1)) {
-            if (b._1 == colour) (colour, mergeTwoBlocksSquares(b._2, new_block)) :: bL
-            else b :: addSquareHelper(c, r, colour, true, true, false, bL, b_list_hold, new_block)
+      if (b._2.head._1 == col) {
+        if ((!below) && (b._2.head._2.indexOf(row - 1) > -1)) {
+          if ((!left) && (!b._2.tail.isEmpty) && (b._2.tail.head._2.indexOf(row) > -1)) {
+            if (b._1 == colour) (colour, mergeTwoBlocksSquares(b._2, newBlock)) :: bL
+            else b :: addSquareHelper(col, row, colour, true, true, false, bL, blockListHold, newBlock)
           } // ^ left = true
           else {
             if (left) {
-              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(b._2, new_block)), b_list_hold, bL)
+              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(b._2, newBlock)), blockListHold, bL)
               else {
-                if (hold) makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
-                else b :: addSquareHelper(c, r, colour, true, true, false, bL, b_list_hold, new_block)
+                if (hold) makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
+                else b :: addSquareHelper(col, row, colour, true, true, false, bL, blockListHold, newBlock)
               }
             }
             else {
-              if (b._1 == colour) addSquareHelper(c, r, colour, true, false, true, bL, b_list_hold,
-                mergeTwoBlocksSquares(b._2, new_block))
-              else b :: addSquareHelper(c, r, colour, true, false, false, bL, b_list_hold, new_block)
+              if (b._1 == colour) addSquareHelper(col, row, colour, true, false, true, bL, blockListHold,
+                mergeTwoBlocksSquares(b._2, newBlock))
+              else b :: addSquareHelper(col, row, colour, true, false, false, bL, blockListHold, newBlock)
             }
           }
         } // ^ below = true
         else {
-          if ((!left) && (!b._2.tail.isEmpty) && (b._2.tail.head._2.indexOf(r) > -1)) {
+          if ((!left) && (!b._2.tail.isEmpty) && (b._2.tail.head._2.indexOf(row) > -1)) {
             if (below) {
-              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(b._2, new_block)), b_list_hold, bL)
+              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(b._2, newBlock)), blockListHold, bL)
               else {
-                if (hold) makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
-                else b :: addSquareHelper(c, r, colour, true, true, false, bL, b_list_hold, new_block)
+                if (hold) makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
+                else b :: addSquareHelper(col, row, colour, true, true, false, bL, blockListHold, newBlock)
               }
             }
             else {
-              if (b._1 == colour) addSquareHelper(c, r, colour, false, true, true, bL, b_list_hold,
-                mergeTwoBlocksSquares(b._2, new_block))
-              else b :: addSquareHelper(c, r, colour, false, true, false, bL, b_list_hold, new_block)
+              if (b._1 == colour) addSquareHelper(col, row, colour, false, true, true, bL, blockListHold,
+                mergeTwoBlocksSquares(b._2, newBlock))
+              else b :: addSquareHelper(col, row, colour, false, true, false, bL, blockListHold, newBlock)
             }
           } // ^ left = true
           else {
-            if (hold) addSquareHelper(c, r, colour, below, left, true, bL, b :: b_list_hold, new_block)
-            else b :: addSquareHelper(c, r, colour, false, false, false, bL, b_list_hold, new_block)
+            if (hold) addSquareHelper(col, row, colour, below, left, true, bL, b :: blockListHold, newBlock)
+            else b :: addSquareHelper(col, row, colour, false, false, false, bL, blockListHold, newBlock)
           }
         }
       }
       else {
-        if (left) (colour, new_block) :: block_list
+        if (left) (colour, newBlock) :: blockList
         else {
-          if (b._2.head._1 == c - 1) {
-            if (b._2.head._2.indexOf(r) > -1) {
-              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(new_block, b._2)), b_list_hold, bL)
-              else makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
+          if (b._2.head._1 == col - 1) {
+            if (b._2.head._2.indexOf(row) > -1) {
+              if (b._1 == colour) makeListNewHoldTail((colour, mergeTwoBlocksSquares(newBlock, b._2)), blockListHold, bL)
+              else makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
             }
             else {
-              if (b._2.head._2.head > r)
-                makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
-              else addSquareHelper(c, r, colour, true, false, true, bL, b :: b_list_hold, new_block)
+              if (b._2.head._2.head > row)
+                makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
+              else addSquareHelper(col, row, colour, true, false, true, bL, b :: blockListHold, newBlock)
             }
           } // ^ hold = true
-          else makeListNewHoldTail((colour, new_block), b_list_hold, block_list)
+          else makeListNewHoldTail((colour, newBlock), blockListHold, blockList)
         }
       }
     }

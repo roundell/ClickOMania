@@ -8,7 +8,7 @@ object main {
 
     val colour = 6
     var grid = GridSetUp.GridSetUp(colour)
-    var blockList = NextMove.getBlockList(0, grid, List())
+    var blockList = NextMove.getBlockList(grid)
     var gridScore = NextMove.blockScoreList(blockList)
     var multiCount = NextMove.multiBlockCount(blockList, 0)
     var singleCells = NextMove.singleBlockCount(blockList, 0)
@@ -29,7 +29,7 @@ object main {
 
       movesHistory = moves_list.head._3.head :: movesHistory
       grid = NextMove.removeBlockFromList(grid, moves_list.head._3.head)
-      blockList = NextMove.getBlockList(0, grid, List())
+      blockList = NextMove.getBlockList(grid)
 
       val gridScoreCalculated = moves_list.head._1
       val gridScoreCalculatedPads = 3 - gridScoreCalculated.toString().length()
