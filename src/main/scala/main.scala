@@ -16,6 +16,7 @@ object main {
     var timeCounter = 0.0
     var movesHistory: NextMove.BlockList = List()
 
+    //println(blockList)
     println(counter + "          " + " scores: " + gridScore + "  " +
       " >>>>            multis: " + multiCount +
       "    singles: " + singleCells)

@@ -239,27 +239,29 @@ object NextMove {
     }
   }
 
+  // The following four functions read the grid row by row from the top down and flip it in to
+  //  a list of lists that represent columns from the bottom up, left to right
   def readGrid(rows: Int): List[List[Char]] =
     readGridHelper(rows - 1, zipGridFirstLine(scala.io.StdIn.readLine().toList))
 
-  def readGridHelper(rows: Int, grid_builder: List[List[Char]]): List[List[Char]] = rows match {
-    case 0 => grid_builder
-    case _ => readGridHelper(rows - 1, zipGridLine(grid_builder, scala.io.StdIn.readLine().toList))
+  def readGridHelper(rows: Int, gridBuilder: List[List[Char]]): List[List[Char]] = rows match {
+    case 0 => gridBuilder
+    case _ => readGridHelper(rows - 1, zipGridLine(gridBuilder, scala.io.StdIn.readLine().toList))
   }
 
-  def zipGridLine(grid_builder: List[List[Char]], grid_line: List[Char]): List[List[Char]] = grid_line match {
+  def zipGridLine(gridBuilder: List[List[Char]], gridLine: List[Char]): List[List[Char]] = gridLine match {
     case List() => List()
-    case x :: xs => {
-      if (x == '-') grid_builder.head :: zipGridLine(grid_builder.tail, xs)
-      else (x :: grid_builder.head) :: zipGridLine(grid_builder.tail, xs)
+    case ch :: chL => {
+      if (ch == '-') gridBuilder.head :: zipGridLine(gridBuilder.tail, chL)
+      else (ch :: gridBuilder.head) :: zipGridLine(gridBuilder.tail, chL)
     }
   }
 
-  def zipGridFirstLine(grid_line: List[Char]): List[List[Char]] = grid_line match {
+  def zipGridFirstLine(gridLine: List[Char]): List[List[Char]] = gridLine match {
     case List() => List()
-    case x :: xs => {
-      if (x == '-') List() :: zipGridFirstLine(xs)
-      else (x :: List()) :: zipGridFirstLine(xs)
+    case ch :: chL => {
+      if (ch == '-') List() :: zipGridFirstLine(chL)
+      else (ch :: List()) :: zipGridFirstLine(chL)
     }
   }
 
@@ -295,7 +297,7 @@ object NextMove {
   }
 
   // This function searches for, and puts the square in either of the two possible blocks that the square could belong to,
-  //  the one beneath it (which must be the first block on the BlockList), and the one to its left.  If the square belongs
+  //  the one beneath it, and the one to its left.  If the square belongs
   //  to the two different blocks, these two blocks must be merged in the place of the first block
 
   //  NB: this square's block goes in the place of the last block with squares in its column (ahead of all those blocks that
