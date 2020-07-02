@@ -28,7 +28,26 @@ I originally wrote the solution in Python with the grid coded as an array.  On f
 ### Major Change: Scala and Lists
 So then I implemented the solution in Scala with the grid as lists.  I devised an algorithm to travel the grid only once to figure out all of the blocks.  Removing a block turned out to be simpler with lists than arrays algorithmically, and way faster since the travel time was related to the size of the block instead of the grid (deepcopy!).  I did some head to head testing between the 2D array and the lists code and although it was significantly faster it was not that much faster per step.  I was still bumping up against the timeout as I tried to increase the number of steps I looked ahead in the code.
 
-### Major efficiencies:
+## Algorithms
+There are several algorithms at play in the solution.  The too-simplistic overall pseudo algorithm can be stated: try all possibilities and choose the one that removes all of the squares (ie. wins).  Here are the steps:
+1. Represent the grid with lists (list of lists) 
+2. Extract a list of all the blocks (multi-square and single-square) from a grid
+3. Remove a block from a grid to create a new grid
+4. Score a grid
+5. Repeat via recursion
+
+### 1. Represent the grid with lists (list of lists)
+HackerRank describes the grid with the coordinates (0, 0) at the top left.  But, the falling rules mean that the blocks move down and to the left.  Therefore, to preserve the grid coordinates of the squares (ex. third square in the sixth list) without saving empty cells, the code flips the coordinates upside down so that (0, 0) is found at the bottom left and I do a translation at the very end to the HackerRank coordinate system.  The coordinates are not saved explicitly, they are found by the position of the cell in the list (row) and the position of the list in the list of lists (column).
+
+Also, it is the columns I represent as lists, again because of the falling rules that the squares fall down.  The squares fall left only when an entire column is empty.  This creates an efficiency in removing blocks.  
+
+### 2. Extract a list of all the blocks (multi-square and single-square) from a grid
+
+Each square will belong to a block and be represented in the list of blocks, even if it is as a single square.  The blocks are NOT ordered the same as the grid.  They are ordered by the block's rightmost and then lowest square.  This is an efficiency in how the code is creating the block list.
+
+The code travels (builds) the grid as it is represented: up each column (along each list).  The grid is built square by square while a complete block list is updated at each iteration.  Each square can belong to one or two blocks that are already existing in the block list (merge) or none (create a new single-square block).  It cannot belong to any block to its right or above because those squares are not added yet.  It can belong to the block that contains the square below and/or the block that contains the square to its left, if colours of those squares match the current.  Either of these two blocks may not exist if the current square is in the bottom row, left column or if the column to the left is shorter (has fewer rows) than the current square's row.
+
+### (more work to be done on this section) Major efficiencies:
 The grids start with 200 squares (10x20) and the five and six-colour test grids start with about 40 multi-blocks.  Without efficiencies, each iteration explodes in the number of grids to test.  The one I implemented from the start was only testing the best five new grids in the next iteration.  I later did some testing on this and found that increasing this to keeping the best ten made no difference in the next move chosen.  Five seemed like the magic number.
 
 Then there is a balance between the number of iterations forward before reducing the number of sequences to explore.  
