@@ -474,37 +474,39 @@ object NextMove {
   }
 
   //  Remove the block's squares from the grid
-  //          >> block_squares are saved by column highest to lowest, then by row lowest to highest
-  //          >> grid lists are saved column lowest to highest, then row lowest to highest
+  //      >> block squares are saved by column highest to lowest, then by row lowest to highest
+  //      >> grid lists are saved column lowest to highest, then row lowest to highest
+  //            >> Therefore: reverse the block's squares to make them same order
   def removeBlockFromList(grid: List[List[Char]], block: Block): List[List[Char]] = {
     removeBlockFromListHelper(grid, block._2.reverse, 0)
   }
 
-  def removeBlockFromListHelper(grid: List[List[Char]], block_squares: BlockSquares, colNumber: Int): List[List[Char]] = grid match {
+  // TODO: Clean up the val, there must be a better way to evaluate and pass
+  def removeBlockFromListHelper(grid: List[List[Char]], blockSquares: BlockSquares, colNumber: Int): List[List[Char]] = grid match {
     case List() => List()
-    case column :: grid_tail => {
-      if (block_squares.isEmpty) grid
-      else if (block_squares.head._1 == colNumber) {
-        val new_column = removeSquaresFromColumn(column, block_squares.head._2, 0)
-        if (new_column.isEmpty) removeBlockFromListHelper(grid_tail, block_squares.tail, colNumber + 1)
-        else new_column :: removeBlockFromListHelper(grid_tail, block_squares.tail, colNumber + 1)
+    case col :: colList => {
+      if (blockSquares.isEmpty) grid
+      else if (blockSquares.head._1 == colNumber) {
+        val newColumn = removeSquaresFromColumn(col, blockSquares.head._2, 0)
+        if (newColumn.isEmpty) removeBlockFromListHelper(colList, blockSquares.tail, colNumber + 1)
+        else newColumn :: removeBlockFromListHelper(colList, blockSquares.tail, colNumber + 1)
       }
-      else column :: removeBlockFromListHelper(grid_tail, block_squares, colNumber + 1)
+      else col :: removeBlockFromListHelper(colList, blockSquares, colNumber + 1)
     }
   }
 
-  def removeSquaresFromColumn(column: List[Char], column_squares: List[Int], rowNumber: Int): List[Char] = column match {
+  def removeSquaresFromColumn(gridColumn: List[Char], blockColumn: List[Int], rowNumber: Int): List[Char] = gridColumn match {
     case List() => List()
-    case square :: column_tail => {
-      if (column_squares.isEmpty) column
-      else if (column_squares.head == rowNumber) removeSquaresFromColumn(column_tail, column_squares.tail, rowNumber + 1)
-      else square :: removeSquaresFromColumn(column_tail, column_squares, rowNumber + 1)
+    case square :: columnTail => {
+      if (blockColumn.isEmpty) gridColumn
+      else if (blockColumn.head == rowNumber) removeSquaresFromColumn(columnTail, blockColumn.tail, rowNumber + 1)
+      else square :: removeSquaresFromColumn(columnTail, blockColumn, rowNumber + 1)
     }
   }
 
-  def removeMovesFromGrid(G: List[List[Char]], moves: List[Block]): List[List[Char]] = moves match {
-    case List() => G
-    case b :: bL => removeMovesFromGrid(removeBlockFromList(G, b), bL)
+  def removeMovesFromGrid(grid: List[List[Char]], moves: List[Block]): List[List[Char]] = moves match {
+    case List() => grid
+    case b :: bL => removeMovesFromGrid(removeBlockFromList(grid, b), bL)
   }
 }
 

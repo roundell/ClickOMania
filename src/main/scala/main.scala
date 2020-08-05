@@ -8,6 +8,10 @@ object main {
 
     val colour = 6
     var grid = GridSetUp.GridSetUp(colour)
+    //var grid2 = NextMove.removeBlockFromList(grid, ('R',List((2,List(11, 12)), (1,List(10, 11)), (0,List(10)))))
+    //println(grid)
+    //println(grid2)
+
     var blockList = NextMove.getBlockList(grid)
     var gridScore = NextMove.blockScoreList(blockList)
     var multiCount = NextMove.multiBlockCount(blockList, 0)
@@ -70,6 +74,7 @@ object main {
 
     grid = NextMove.removeMovesFromGrid(GridSetUp.GridSetUp(colour), movesHistory.take(25))
     println(grid)
+
   }
   def blockListToString(blockList: BlockList): String = blockList match {
     case List() => ""
@@ -82,14 +87,13 @@ object main {
   type BlockList = List[Block]
 }
 
-//TODO: Install GitHub Desktop
-
-//TODO: figure out the classpath or something so that I can use IntelliJ properly
 
 //TODO: figure out where I should keep the control variables for the program
 
 //TODO: properly rename variables (camelCase, etc. + change "squares" to "cells", etc.)
 
 //TODO: create test suite
+
+//TODO: make functions tail recursive
 
 //TODO: make it multi-threaded so that player can choose next move before the computer does
