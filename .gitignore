@@ -1,13 +1,11 @@
 *.log
 
-
 # sbt specific
-# sbt specific
-.cache/
-.history/
-.lib/
-.lib/
+.cache/*
+.history/*
+.lib/*
+.idea/*
 dist/*
-dist/*
-target/
-target/
+target/*
+project/target/*
+project/project/*
