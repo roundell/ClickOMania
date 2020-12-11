@@ -1,20 +1,20 @@
 package clickomania
 
 /** To execute the code in HACKERRANK:
-      1. set the language of the current buffer to Scala
-      2. copy this entire file below this comment block (must remove package declaration above)
-      3. rename object to "Solution"
-  **/
+ * 1. set the language of the current buffer to Scala
+ * 2. copy this entire file below this comment block (must remove package declaration above)
+ * 3. rename object to "Solution"
+ * */
 
 object NextMove {
 
-  type BlockSquares = List[(Int, List[Int])]  // Squares are recorded by column then row: (c #, (r #s)), (c #2, (r #s)), ...
-  type Block = (Char, BlockSquares)           // Add above to the colour to completely define the block
-  type BlockList = List[Block]                // A list of blocks >> could be entire grid as blocks
-                                              //                  >> could be sequence of blocks removed from a grid
-  type Moves = (Int, List[Int], BlockList)    // Sequence of moves (Blocklist) with scores of each move (List[Int])
-                                              //    and final score (Int)
-  type MovesList = List[Moves]                // List of move sequences sorted by final scores: lowest (best) score first
+  type BlockSquares = List[(Int, List[Int])] // Squares are recorded by column then row: (c #, (r #s)), (c #2, (r #s)), ...
+  type Block = (Char, BlockSquares) // Add above to the colour to completely define the block
+  type BlockList = List[Block] // A list of blocks >> could be entire grid as blocks
+  //                  >> could be sequence of blocks removed from a grid
+  type Moves = (Int, List[Int], BlockList) // Sequence of moves (Blocklist) with scores of each move (List[Int])
+  //    and final score (Int)
+  type MovesList = List[Moves] // List of move sequences sorted by final scores: lowest (best) score first
 
 
   def main(args: Array[String]) {
@@ -27,62 +27,15 @@ object NextMove {
     //            At this time not used
 
     val grid = readGrid(rows)
-    val movesList = getNextMove(grid)
+    val movesList = Solution.getNextMove(grid)
     printNextMove(movesList)
   }
 
-  def getNextMove(grid: List[List[Char]]): MovesList = {
-    val blockList = getBlockList(grid)
-    val grid_score = blockScoreList(blockList)
-    val mBlockCount = multiBlockCount(blockList, 0)
-
-    val movesScores = List(grid_score, grid_score, grid_score, grid_score, grid_score,
-      grid_score, grid_score, grid_score, grid_score, grid_score, grid_score)
-
-    var buffer = 3
-    var movesDepth = List(5, 2, 2, 2)
-    var keepVert = 25
-    var keepHor = List(25, 25, 25, 50)
-    val movesWidth = 5
-
-
-    if (mBlockCount < 15) {
-      buffer = 10
-      movesDepth = List(5, 4, 4, 3)
-      keepHor = List(40, 35, 35, 50)
-    }
-    else if (mBlockCount < 20) {
-      buffer = 10
-      movesDepth = List(5, 4, 4, 3)
-      keepHor = List(35, 35, 35, 50)
-    }
-    else if (mBlockCount < 25) {
-      buffer = 4
-      movesDepth = List(5, 4, 3, 3)
-      keepHor = List(35, 35, 35, 50)
-    }
-    else if (mBlockCount < 30) {
-      buffer = 4
-      movesDepth = List(5, 3, 3, 3)
-      keepHor = List(35, 35, 35, 50)
-    }
-    else if (mBlockCount < 35) {
-      buffer = 4
-      movesDepth = List(5, 3, 2, 2)
-      keepHor = List(30, 25, 25, 50)
-    }
-
-    val moves_list = getNextMoveHelper(grid,
-                                    getBestMoveList(grid, movesDepth.head, movesWidth, movesScores, buffer, keepVert),
-                                      movesScores, movesDepth.tail, movesWidth, buffer, keepHor, keepVert)
-
-    return moves_list
-  }
 
   def getNextMoveHelper(grid: List[List[Char]], movesList: MovesList, movesScores: List[Int],
                         movesDepth: List[Int], movesWidth: Int, buffer: Int,
                         keepHor: List[Int], keepVert: Int): MovesList = {
-    if(movesDepth.isEmpty) return movesList
+    if (movesDepth.isEmpty) return movesList
 
     var movesListNext: MovesList = List()
     var movesScoresNext = movesScores
@@ -96,13 +49,13 @@ object NextMove {
         return movesListNext
     }
 
-    if(movesListNext.isEmpty)
+    if (movesListNext.isEmpty)
       return movesList
-    else if(movesDepth.tail.isEmpty)
+    else if (movesDepth.tail.isEmpty)
       return movesListNext
     else
       return getNextMoveHelper(grid, movesListNext, movesScores, movesDepth.tail, movesWidth, buffer,
-                              keepHor.tail, keepVert)
+        keepHor.tail, keepVert)
   }
 
   def getBestMoveList(grid: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
@@ -133,7 +86,7 @@ object NextMove {
 
         if (b_score < new_moves_scores.head + buffer) {
           val moves_list_next = getBestMoveList(removeBlockFromList(grid, blocks.head),
-                              moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
+            moves_depth - 1, moves_width, new_moves_scores.tail, buffer, keep)
           moves_list_this = mergeMovesListMulti(keep, b_score, scores, blocks, moves_list_this, moves_list_next)
 
           if ((!moves_list_this.isEmpty) && (moves_list_this.head._1 == 0)) return moves_list_this
@@ -149,33 +102,34 @@ object NextMove {
   def updateMoveScores(move_scoresA: List[Int], move_scoresB: List[Int]): List[Int] = move_scoresA match {
     case List() => move_scoresB
     case s :: sL =>
-      if(move_scoresB.nonEmpty) {
+      if (move_scoresB.nonEmpty) {
         if (s < move_scoresB.head) s :: updateMoveScores(sL, move_scoresB.tail)
         else move_scoresB.head :: updateMoveScores(sL, move_scoresB.tail)
       }
-      else  move_scoresA
+      else move_scoresA
   }
+
   def updateMovesScoresWith0or1(movesScores: List[Int], buffer: Int): List[Int] = movesScores match {
     case List() => List()
     case s :: sl =>
-      if(s < 2) (s - buffer) :: sl
-      else      s :: updateMovesScoresWith0or1(sl, buffer)
+      if (s < 2) (s - buffer) :: sl
+      else s :: updateMovesScoresWith0or1(sl, buffer)
   }
 
   def blockScoreList(blockList: BlockList): Int = {
     blockScoreListHelper(blockList, Map(), 0)
   }
 
-  def blockScoreListHelper(blockList: BlockList, colourSafe: Map[Char,Int], score: Int): Int = blockList match {
-    case List() => score + (100 * colourSafe.foldLeft(0)(_+_._2))
+  def blockScoreListHelper(blockList: BlockList, colourSafe: Map[Char, Int], score: Int): Int = blockList match {
+    case List() => score + (100 * colourSafe.foldLeft(0)(_ + _._2))
     case b :: bl =>
       if (isSingleSquare(b._2)) { // single square is worst
-        if(colourSafe.contains(b._1))
+        if (colourSafe.contains(b._1))
           blockScoreListHelper(bl, colourSafe + (b._1 -> 0), score + 2)
         else
           blockScoreListHelper(bl, colourSafe + (b._1 -> 1), score + 2)
       }
-      else  blockScoreListHelper(bl, colourSafe + (b._1 -> 0), score + 1) // multi column block aint so bad
+      else blockScoreListHelper(bl, colourSafe + (b._1 -> 0), score + 1) // multi column block aint so bad
   }
 
   def multiBlockCount(blockList: BlockList, multiCount: Int): Int = blockList match {
@@ -219,7 +173,7 @@ object NextMove {
   // moves_listB is the list coming from further depth, so must add current block and its score to the
   // elements as they are merged into the return value
   // What do I do about equal scores?  do i care if they aren't 0?
-  
+
   def mergeMovesListMulti(width: Int, score: Int, scores: List[Int], block_list: BlockList,
                           moves_listA: MovesList, moves_listB: MovesList): MovesList = moves_listA match {
     case List() => {
@@ -509,4 +463,3 @@ object NextMove {
     case b :: bL => removeMovesFromGrid(removeBlockFromList(grid, b), bL)
   }
 }
-
