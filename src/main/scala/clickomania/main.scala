@@ -24,7 +24,7 @@ object main {
       " >>>>            multis: " + multiCount +
       "    singles: " + singleCells)
 
-    while (NextMove.multiBlockCount(blockList, 0) > 35) {
+    while (NextMove.multiBlockCount(blockList, 0) > 0) {
       val time1 = System.nanoTime()
       val moves_list = Solution.getNextMove(grid)
       val time2 = System.nanoTime()
