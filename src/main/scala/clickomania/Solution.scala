@@ -4,6 +4,7 @@ import clickomania.NextMove._
 
 object Solution {
 
+  // set up variables to pass to getNextMoveHelper and getBestMoveList
   def getNextMove(grid: List[List[Char]]): MovesList = {
     val blockList = getBlockList(grid)
     val grid_score = blockScoreList(blockList)
@@ -52,6 +53,7 @@ object Solution {
     moves_list
   }
 
+  //
   def getNextMoveHelper(grid: List[List[Char]], movesList: MovesList, movesScores: List[Int],
                         movesDepth: List[Int], movesWidth: Int, buffer: Int,
                         keepHor: List[Int], keepVert: Int): MovesList = {
@@ -78,6 +80,7 @@ object Solution {
         keepHor.tail, keepVert)
   }
 
+  // Takes a block and with the moves_width best scores at each level looks moves_depth deep
   def getBestMoveList(grid: List[List[Char]], moves_depth: Int, moves_width: Int, move_scores: List[Int],
                       buffer: Int, keep: Int): MovesList = {
     val blockList = getBlockList(grid)
