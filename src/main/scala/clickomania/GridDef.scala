@@ -13,15 +13,15 @@ trait GridDef {
   type MovesList = List[Moves] // List of move sequences sorted by final scores: lowest (best) score first
 
   case class Block(colour: Char, blockSquares: BlockSquares) {
-    val isSingleSquare: Boolean = {
+    lazy val isSingleSquare: Boolean = {
       if (this.blockSquares.head._2.tail.isEmpty && this.blockSquares.tail.isEmpty) true
       else false
     }
   }
 
   case class Grid(gridSquares: GridSquares) {
-    val gridBlocks: GridBlocks = getGridBlocks(gridSquares) // representation of this grid as blocks
-    val (score, unsolvable) = blockScoreList(gridBlocks)
+    lazy val gridBlocks: GridBlocks = getGridBlocks(gridSquares) // representation of this grid as blocks
+    lazy val (score, unsolvable) = blockScoreList(gridBlocks)
 
     // This set of functions includes:
     //  getBlockList, getBlockListRow, getBlockListColumn // functions to travel the grid square by square up the columns left to right
@@ -40,186 +40,82 @@ trait GridDef {
       // This function chooses the next square in the column (the next row up)
       def getGBRow(col: Int, row: Int, column: List[Char], gridBlocks: GridBlocks): GridBlocks = column match {
         case List() => gridBlocks
-        case ch :: chL => getGBRow(col, row + 1, chL,
-          addSquare(col, row, ch, false, false, false, gridBlocks, List(), List((col, List(row)))))
+        case ch :: chL => getGBRow(col, row + 1, chL, addSquare(Block(ch, List((col, List(row)))), gridBlocks))
       }
 
-      // This function searches for, and puts the square in either of the two possible blocks that the square could belong to,
-      //  the one beneath it, and the one to its left.  If the square belongs
-      //  to the two different blocks, these two blocks must be merged in the place of the first block
-
-      //  NB: this square's block goes in the place of the last block with squares in its column (ahead of all those blocks that
-      //      do not have block in its column) unless the block it belongs to has other squares in its column (then keeps that place)
-      //
-      //
-      //  The block tested could be:
-      //  0: new_block :: b_list
-      //  =column:
-      //      !below && row-1:
-      //          set below = true
-      //          !left && column-1 & row:
-      //              set left = true
-      //              same colour:
-      //                  return (merge new_block to current) :: b_list               // found both in this block and same colour
-      //              else
-      //                  prepend current                                             // found both in this block and NOT same colour
-      //          else:
-      //              if left=true:
-      //                  same colour
-      //                      return (merge new_block to current) :: hold? :: b_list  // found below and same colour, left previously passed
-      //                  else
-      //                      if hold=true
-      //                          return (new_block) :: hold? :: b_list               // found below and NOT same colour, left was same colour
-      //                      else
-      //                          prepend current                                     // found below and NOT same colour, left was NOT same colour
-      //              else
-      //                  same colour
-      //                      merge current with new_block; set hold = true           // found below and same colour, left not yet passed
-      //                  else
-      //                      prepend current                                         // found below and NOT same colour, left not yet passed
-      //      else
-      //          !left && column-1 & row:
-      //              set left = true
-      //              if below=true
-      //                  same colour:
-      //                      return (merge new_block to current) :: hold? :: b_list  // found left and same colour, below previously passed
-      //                  else
-      //                      if hold=true
-      //                          return (new_block) :: hold? :: b_list               // found left and NOT same colour, below was same colour
-      //                      else
-      //                          prepend current                                     // found left and NOT same colour, below was NOT same colour
-      //              else:
-      //                  same colour:
-      //                      merge current with new_block; set hold = true           // found left and same colour, below not yet passed
-      //                  else
-      //                      prepend current                                         // found left and NOT same colour, below not yet passed
-      //          else
-      //              if hold=true
-      //                  hold current                                                // unmatching block in column and below or left matched
-      //              else
-      //                  prepend current                                             // unmatching block in column and below and left unmatched
-      //  else
-      //      set hold = true
-      //      if left=true
-      //          return new_block :: hold? :: b_list                                 // left and below already passed unmatched, now add square
-      //      column-1:   // current block has no squares in current column, so new_block must be appended before any of these
-      //          row:    //  and also below = true
-      //              same colour:
-      //                  return (merge new_block to current) :: hold? :: b_list      // found left and same colour, below previously passed
-      //              else
-      //                  return new_block :: hold? :: b_list                         // found left and NOT same colour, below previously passed
-      //          else:
-      //              hold current                                                    // unmatching block in column-1, <row, left not yet found
-      //      else
-      //          return new_block :: hold? :: b_list                                 // no left exists: column-1 shorter than row
-
-
-      //  i. a non-matching block in the same column before we have found the below or left squares > these blocks are simply prepended
-      //  ii. a block with the below or left square
-      //              matching: > current square is merged with this block and the block is held
-      //              non-matching: > simply prepend
-      //  iii. a non-matching block on the same column after we found the non-matching below or left square > simply prepend
-      //  iv. a non-matching block on the same or next column after we found the matching below or left square > these blocks must be held
-      //  v. a second block either the below or left square
-      //              matching:
-      //                  > this block must be merged with block held from ii.
-      //                  > result must be prepended to blocks held from iii.
-      //                  > which must be prepended to the rest of the blocks
-      //              non-matching:
-      //                  > same as matching but don't merge this block in, just use block held from ii.
-
-      /*def addSquare(col: Int, row: Int, colour: Char, blockList: BlockList): BlockList = {
-        addSquareHelper(col, row, colour, false, false, false, blockList, List(), List((col, List(row))))
-      }*/
-
-      def addSquare(col: Int, row: Int, colour: Char, below: Boolean, left: Boolean, hold: Boolean, blockList: BlockList,
-                          blockListHold: BlockList, newBlock: BlockSquares): BlockList = blockList match {
-        case List() => makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
+      // Going to check first block as below and maybe left block, then addSquareFindLeft to look for left block if its not found here
+      def addSquare(block: Block, blockList: BlockList): BlockList = blockList match {
+        case List() => block :: blockList // empty blocklist so simply add single block
         case b :: bL => {
-          if (b.blockSquares.head._1 == col) {
-            if ((!below) && (b.blockSquares.head._2.indexOf(row - 1) > -1)) {
-              if ((!left) && (!b.blockSquares.tail.isEmpty) && (b.blockSquares.tail.head._2.indexOf(row) > -1)) {
-                if (b.colour == colour) Block(colour, mergeTwoBlocksSquares(b.blockSquares, newBlock)) :: bL
-                else b :: addSquare(col, row, colour, true, true, false, bL, blockListHold, newBlock)
-              } // ^ left = true
-              else {
-                if (left) {
-                  if (b.colour == colour) makeListNewHoldTail(Block(colour, mergeTwoBlocksSquares(b.blockSquares, newBlock)), blockListHold, bL)
-                  else {
-                    if (hold) makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
-                    else b :: addSquare(col, row, colour, true, true, false, bL, blockListHold, newBlock)
-                  }
-                }
-                else {
-                  if (b.colour == colour) addSquare(col, row, colour, true, false, true, bL, blockListHold,
-                    mergeTwoBlocksSquares(b.blockSquares, newBlock))
-                  else b :: addSquare(col, row, colour, true, false, false, bL, blockListHold, newBlock)
-                }
-              }
-            } // ^ below = true
-            else {
-              if ((!left) && (!b.blockSquares.tail.isEmpty) && (b.blockSquares.tail.head._2.indexOf(row) > -1)) {
-                if (below) {
-                  if (b.colour == colour) makeListNewHoldTail(Block(colour, mergeTwoBlocksSquares(b.blockSquares, newBlock)), blockListHold, bL)
-                  else {
-                    if (hold) makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
-                    else b :: addSquare(col, row, colour, true, true, false, bL, blockListHold, newBlock)
-                  }
-                }
-                else {
-                  if (b.colour == colour) addSquare(col, row, colour, false, true, true, bL, blockListHold,
-                    mergeTwoBlocksSquares(b.blockSquares, newBlock))
-                  else b :: addSquare(col, row, colour, false, true, false, bL, blockListHold, newBlock)
-                }
-              } // ^ left = true
-              else {
-                if (hold) addSquare(col, row, colour, below, left, true, bL, b :: blockListHold, newBlock)
-                else b :: addSquare(col, row, colour, false, false, false, bL, blockListHold, newBlock)
-              }
-            }
-          }
+          val newCol = block.blockSquares.head._1
+          val newRow = block.blockSquares.head._2.head
+          val firstCol = b.blockSquares.head._1
+          val firstColRows = b.blockSquares.head._2
+          val secondCol = b.blockSquares.tail
+
+          val below = (newCol == firstCol) && (newRow == firstColRows.head - 1)
+          val left = ((newCol - 1 == firstCol) && firstColRows.contains(newRow) ||
+              (secondCol.nonEmpty && (newCol -1 == secondCol.head._1) && secondCol.head._2.contains(newRow)))
+
+          if(left) // Found left so done, merge if same colour; doesn't matter if we found below block or not
+            if (block.colour == b.colour) mergeTwoBlocks(block, b) :: bL
+            else block :: blockList
+          else if(below && (block.colour == b.colour)) addSquareFindLeft(mergeTwoBlocks(block, b), blockList, bL, List())
+          else addSquareFindLeft(block, blockList, bL, List(b)) // hold and go looking for the left block
+        }
+      }
+
+      // Already checked first block on list, going to check until finding the left block
+      def addSquareFindLeft(block: Block, blockList: BlockList, blockListTail: BlockList, holdBlocks: BlockList): BlockList = blockListTail match {
+        case List() => block :: blockList // empty blocklist -> block is in first column so left does not exist
+        case b :: bL => {
+          val newCol = block.blockSquares.head._1
+          val newRow = block.blockSquares.head._2.head
+          val firstCol = b.blockSquares.head._1
+          val firstColRows = b.blockSquares.head._2
+          val secondCol = b.blockSquares.tail
+
+          val done = (newCol - 1 > firstCol) || ((newCol - 1 == firstCol) && (newRow > firstColRows.head))
+
+          if(done) block :: blockList // column to the left is shorter than this block, left does not exist
           else {
-            if (left) Block(colour, newBlock) :: blockList
-            else {
-              if (b.blockSquares.head._1 == col - 1) {
-                if (b.blockSquares.head._2.indexOf(row) > -1) {
-                  if (b.colour == colour) makeListNewHoldTail(Block(colour, mergeTwoBlocksSquares(newBlock, b.blockSquares)), blockListHold, bL)
-                  else makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
-                }
-                else {
-                  if (b.blockSquares.head._2.head > row)
-                    makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
-                  else addSquare(col, row, colour, true, false, true, bL, b :: blockListHold, newBlock)
-                }
-              } // ^ hold = true
-              else makeListNewHoldTail(Block(colour, newBlock), blockListHold, blockList)
-            }
+            val left = ((newCol - 1 == firstCol) && firstColRows.contains(newRow)) ||
+              (secondCol.nonEmpty && (newCol - 1 == secondCol.head._1) && secondCol.head._2.contains(newRow))
+
+            if (left)
+              if (block.colour == b.colour) mergeTwoBlocks(block, b) :: addBackHold(blockListTail, holdBlocks)
+              else block :: blockList
+            else addSquareFindLeft(block, blockList, bL, b :: holdBlocks) // hold and go looking again
           }
         }
       }
 
-      //  Combine the reversal of the hold list with prepending it to the rest of the block list and prepending new_block to that
-      // acc: 1               1                       1
-      // hold: 5, 4, 3, 2     4, 3, 2                 List()
-      // rest: 6, 7, 8        5, 6, 7, 8      ...     2, 3, 4, 5, 6, 7, 8
-      def makeListNewHoldTail(new_block: Block, b_list_hold: BlockList, b_list_rest: BlockList): BlockList = b_list_hold match {
-        case List() => new_block :: b_list_rest
-        case b :: bLhold => makeListNewHoldTail(new_block, bLhold, b :: b_list_rest)
+      def addBackHold(blockListTail: BlockList, holdBlocks: BlockList): BlockList = holdBlocks match {
+        case List() => blockListTail
+        case b :: bL => addBackHold(b :: blockListTail, bL)
       }
+
+      def mergeTwoBlocks(b1: Block, b2: Block): Block = Block(b1.colour, mergeTwoBlocksSquares(b1.blockSquares, b2.blockSquares))
 
       // This function merges two BlockSquares (list of squares that make up a block) into one
-      def mergeTwoBlocksSquares(b1: BlockSquares, b2: BlockSquares): BlockSquares = b1 match {
-        case List() => b2
-        case b :: bl => {
-          if (b2.isEmpty) b1
-          else if (b._1 > b2.head._1) b :: mergeTwoBlocksSquares(bl, b2)
-          else (b._1, prependTwoLists(b._2, b2.head._2)) :: mergeTwoBlocksSquares(bl, b2.tail)
+      def mergeTwoBlocksSquares(bs1: BlockSquares, bs2: BlockSquares): BlockSquares = (bs1, bs2) match {
+        case (List(), List()) => List()
+        case (List(), bs) => bs
+        case (bs, List()) => bs
+        case ((col1, rows1) :: bsTail1, (col2, rows2) :: bsTail2) => {
+          if (col1 == col2) (col1, mergeTwoBlocksColumns(rows1, rows2)) :: mergeTwoBlocksSquares(bsTail1, bsTail2)
+          else (col1, rows1) :: mergeTwoBlocksSquares(bsTail1, bs2)
+            // the else catchall is for below block maybe having an extra column on the right
         }
       }
 
-      def prependTwoLists(list1: List[Int], list2: List[Int]): List[Int] = list1 match {
-        case List() => list2
-        case e :: el => e :: prependTwoLists(el, list2)
+      def mergeTwoBlocksColumns(rows1: List[Int], rows2: List[Int]): List[Int] = (rows1, rows2) match {
+        case (List(), List()) => List()
+        case (List(), row) => row
+        case (row, List()) => row
+        case ((row1 :: rest1), (row2 :: rest2)) =>
+          if(row1 < row2) row2 :: mergeTwoBlocksColumns(rows1, rest2)
+          else row1 :: mergeTwoBlocksColumns(rest1, rows2)
       }
     }
 
