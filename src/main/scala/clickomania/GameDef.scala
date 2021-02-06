@@ -1,5 +1,7 @@
 package clickomania
 
+import scala.annotation.tailrec
+
 /* Home of the Block, Grid and Moves case classes + type definitions that help clarify */
 trait GameDef {
 
@@ -129,6 +131,7 @@ trait GameDef {
       getGBColumn(0, gridSquares, List())
     }
 
+    // Scores the grid: lowest is best; 1 point for multi-square block and 2 for single-square block
     def blockScoreList(blockList: BlockList): (Int, Boolean) = {
       def blockScoreListHelper(blockList: BlockList, colourSafe: Map[Char, Int], score: Int): (Int, Boolean) = blockList match {
         case List() => {
@@ -145,6 +148,24 @@ trait GameDef {
           else blockScoreListHelper(bl, colourSafe + (b.colour -> 0), score + 1) // multi column block aint so bad
       }
       blockScoreListHelper(blockList, Map(), 0)
+    }
+
+    def findBlock(col: Int, row: Int): Block = {
+      @tailrec
+      def findBlock(gridBlocks: GridBlocks): Block = gridBlocks match {
+        case List() => null
+        case block :: blockList =>
+          if(isBlockCol(block.blockSquares)) block
+          else findBlock(blockList)
+      }
+      @tailrec
+      def isBlockCol(blockSquares: BlockSquares): Boolean = blockSquares match {
+        case List() => false
+        case column :: colList =>
+          if((col == column._1) && column._2.contains(row)) true
+          else isBlockCol(colList)
+      }
+      findBlock(this.gridBlocks)
     }
 
     //  Remove the block's squares from the grid

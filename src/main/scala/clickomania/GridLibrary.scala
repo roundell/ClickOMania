@@ -39,6 +39,19 @@ trait GridLibrary {
       List('R', 'Y', 'O', 'Y', 'B', 'G', 'V', 'O', 'G', 'O', 'R', 'Y', 'O', 'B', 'G', 'V', 'B', 'B', 'G', 'O'),
       List('O', 'B', 'G', 'G', 'V', 'V', 'Y', 'B', 'V', 'R', 'V', 'B', 'Y', 'V', 'B', 'R', 'G', 'B', 'G', 'B'))
 
+    case 610 => return List(
+      List('V', 'G', 'R', 'V', 'G', 'G', 'O', 'O', 'R', 'B', 'R', 'O', 'V', 'O', 'V', 'V', 'Y', 'B'),
+      List('B', 'G', 'G', 'O', 'O', 'G', 'O', 'Y', 'R', 'R', 'O', 'O', 'G', 'O', 'R', 'Y', 'B', 'G'),
+      List('O', 'Y', 'R', 'Y', 'V', 'O', 'B', 'Y', 'Y', 'R', 'R', 'Y', 'B', 'O', 'R', 'O', 'Y', 'O'),
+      List('B', 'G', 'Y', 'Y', 'V', 'V', 'O', 'B', 'Y', 'G', 'R', 'Y', 'O', 'O', 'Y', 'V', 'R', 'O', 'B', 'B'),
+      List('V', 'O', 'B', 'Y', 'O', 'R', 'O', 'Y', 'V', 'B', 'Y', 'Y', 'Y', 'Y', 'Y', 'V', 'Y', 'V', 'V'),
+      List('V', 'O', 'Y', 'B', 'B', 'O', 'G', 'R', 'O', 'V', 'O', 'B', 'O', 'Y', 'G'),
+      List('O', 'R', 'V', 'B', 'Y', 'R', 'G', 'O', 'O', 'V', 'G', 'O', 'G', 'Y', 'Y', 'Y', 'R', 'G'),
+      List('O', 'B', 'B', 'G', 'O', 'R', 'V', 'V', 'V', 'Y', 'V', 'O', 'Y', 'Y', 'G', 'R', 'R'),
+      List('R', 'Y', 'O', 'Y', 'B', 'G', 'V', 'O', 'G', 'O', 'O', 'B', 'G', 'V', 'G', 'O'),
+      List('O', 'B', 'V', 'V', 'Y', 'B', 'V', 'R', 'V', 'B', 'V', 'B', 'R', 'G', 'G', 'B'))
+
+
     case 10 => return List(
       List('V', 'O', 'O', 'V', 'G', 'C'),
       List('B', 'V', 'G', 'C'),
