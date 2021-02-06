@@ -1,8 +1,8 @@
 package clickomania
 
-object GridSetUp {
+trait GridLibrary {
 
-  def GridSetUp(Colours: Int): List[List[Char]] = Colours match {
+  def gridLibrary(Colours: Int): List[List[Char]] = Colours match {
     case 2 => return List(
       List('B', 'R', 'R', 'B', 'R', 'R', 'B', 'R', 'R', 'B', 'R', 'B', 'R', 'B', 'B', 'B', 'B', 'B', 'R', 'B'),
       List('B', 'B', 'R', 'R', 'B', 'B', 'R', 'B', 'R', 'R', 'R', 'R', 'B', 'B', 'R', 'B', 'R', 'R', 'B', 'R'),

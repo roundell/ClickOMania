@@ -5,6 +5,7 @@ object main {
   def main(args: Array[String]): Unit = {
     println("Hello James!")
 
+    /*
     val colour = 6
     var grid = GridSetUp.GridSetUp(colour)
     //var grid2 = NextMove.removeBlockFromList(grid, ('R',List((2,List(11, 12)), (1,List(10, 11)), (0,List(10)))))
@@ -73,6 +74,7 @@ object main {
 
     grid = NextMove.removeMovesFromGrid(GridSetUp.GridSetUp(colour), movesHistory.take(25))
     println(grid)
+    */
 
   }
 
