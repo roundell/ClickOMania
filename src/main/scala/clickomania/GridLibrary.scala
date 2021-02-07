@@ -58,6 +58,18 @@ trait GridLibrary {
       List('B', 'V', 'V', 'O'),
       List('B'))
 
+    case 11 => return List(
+      List('B', 'V', 'O', 'O'),
+      List('B'),
+      List('B', 'V', 'V', 'O'))
+
+    case 12 => return List(
+      List('B', 'B', 'B', 'O', 'B'),
+      List('B', 'C', 'C', 'O', 'B', 'B', 'B', 'B'),
+      List('B', 'P', 'R', 'P', 'B', 'B'),
+      List('B', 'Y', 'R', 'Y', 'B'),
+      List('B', 'B', 'B', 'B', 'B'))
+
     case 25 => return List(
       List('V', 'R', 'V', 'G', 'B', 'R', 'V', 'O', 'V', 'V', 'Y', 'B'),
       List('B', 'O', 'G', 'O', 'G', 'O', 'G'),

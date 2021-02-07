@@ -1,8 +1,34 @@
 package clickomania
 
-trait UserIO extends GameDef with GridReader {
+trait UserIO extends GameDef with GridReader with GridLibrary {
 
-  def getAGrid(): Grid = {
+  def userIntro(): Unit = {
+    println("Please make a selection:")
+    println("   1. Play a grid from the library")
+    println("   2. Insert a grid and play")
+
+    val choice = scala.io.StdIn.readLine.toInt
+    if(choice == 1) playAGrid(chooseLibraryGrid())
+    else playAGrid(getAUserGrid())
+  }
+
+  def chooseLibraryGrid(): Grid = {
+    println("Please make a selection:")
+    println("   1. Beginner Beginner")
+    println("   2. Beginner")
+    println("   3. Beginner Large Grid")
+    println("   4. Intermediate Large Grid")
+    println("   5. Super Duper Hard For The Algorithm To Solve Large Grid")
+
+    val choice = scala.io.StdIn.readLine.toInt
+    if(choice == 1) Grid(gridLibrary(11))
+    else if(choice == 2) Grid(gridLibrary(12))
+    else if(choice == 3) Grid(gridLibrary(2))
+    else if(choice == 4) Grid(gridLibrary(3))
+    else Grid(gridLibrary(6))
+  }
+
+  def getAUserGrid(): Grid = {
     println("Please enter the number of rows and columns of your grid (Type \'q\' to quit)")
     println("Format: \"rows columns\"")
     val dimensions = scala.io.StdIn.readLine.split(" ")
