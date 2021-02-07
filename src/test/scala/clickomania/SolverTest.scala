@@ -69,12 +69,12 @@ class SolverTest extends Solver with GridLibrary {
   }
 */
   @Test def `Solver Moves: solve a large 6-colour grid using findBestMove`(): Unit = {
-    val grid = Grid(gridLibrary(6))
+    val grid = Grid(gridLibrary(610))
 
     val time = System.nanoTime()
     val movesList = grid.createMovesList(50)
 
-    val movesListFinal = findBestMove(movesList, time, 30000000000L, 3000)
+    val movesListFinal = findBestMove(movesList, time, 100000000000L, 800)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 40s: ") // + movesListFinal)
   }
