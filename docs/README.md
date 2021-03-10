@@ -1,9 +1,12 @@
 ## Background
 I coded 100% of this scala project.  I used no templates and copied no code.  The code organization, data structure and accompanying algorithm design is completely my own.  I learned scala from Coursera's Scala "specialization" courses by École Polytechnique Fédérale de Lausanne and used the course material and assignments as inspiration, as well, of course, as stackoverflow and every Scala blog on the internet.
 
-I chose to code and open source this project to show that I am skilled in code organization and design of data structures and alogorithms.  I also chose this project to show my skill in functional and object-oriented programming.  There are no vars in the entire codebase.
+I chose to code and open source this project to show that I am skilled in code organization and design of data structures and alogorithms.  I also chose this project to show my skill in functional and object-oriented programming.  There are no vars in the entire codebase.  I coded the project using Test Directed Development, creating Unit Tests to cover and pass each unit of code before moving on to develop the next unit.
 
 I also chose this project because it was a very fun one to solve.  HackerRank gives out a whopping 80 points to solve it!  Though it took much longer than 8x any of the regular coding exercises.
+
+### Current Functionality
+When running "ClickOMania" you will receive a prompt to play a few grids from a library or enter your own.  The grids are not all 20x10 as described below in the Problem Description but are played the same way.  Future iterations will demonstrate the program's ability to solve the difficult grids from HackerRank, as well as a fast game style with small solveable grids.  
 
 ## Origin of the Project
 This project was created as a solution to HackerRank's "Artificial Intelligence > Bot Building > Click-o-Mania" challenge.  While it was originally coded such that it could be copied back to HackerRank, after achieving full marks I lost interest in keeping it in one page format and reformatted it to the current multi-file project design.
@@ -37,15 +40,15 @@ There are several algorithms at play in the solution.  The too-simplistic overal
 The algorithms described below are very high level.  For details, look at the code!
 
 ### 1. Represent the grid with lists (list of lists)
-HackerRank describes the grid with the coordinates (0, 0) at the top left.  But, the falling rules mean that the blocks move down and to the left.  Therefore, to preserve the grid coordinates of the squares (ex. third square in the sixth list) without saving empty cells, the code flips the coordinates upside down so that (0, 0) is found at the bottom left and I do a translation if needed for HackerRank or for future display purposes.  The coordinates are not saved explicitly, they are found by the position of the cell in the list (row) and the position of the list in the list of lists (column).
+HackerRank describes the grid with the coordinates (0, 0) at the top left.  But, the falling rules mean that the squares move down and to the left.  Therefore, to preserve the grid coordinates of the squares (ex. third square in the sixth list) without saving empty cells, the code flips the coordinates upside down so that (0, 0) is found at the bottom left and I do a translation if needed for HackerRank or for future display purposes.  The coordinates are not saved explicitly, they are found by the position of the cell in the list (row) and the position of the list in the list of lists (column).
 
-Also, it is the columns I represent as lists, again because of the falling rules that the squares fall down.  The squares fall left only when an entire column is empty.  This creates an efficiency in removing blocks.  
+Also, it is the columns I represent as lists, again because of the falling rules that the squares fall down.  The squares fall left only when an entire column is empty.  This creates an efficiency when removing squares.  
 
 ### 2. Extract a list of all the blocks (multi-square and single-square) from a grid
 
 Each square will belong to a block and be represented in the list of blocks, even if it is as a single square.  The blocks are NOT ordered the same as the grid.  They are ordered by the block's rightmost and then highest square.  This is an efficiency in how the code is creating the block list.
 
-The code travels (builds) the grid as it is represented: up each column (along each list).  The grid is built square by square while a complete block list is updated at each iteration.  Each square can belong to one or two blocks that are already existing in the block list (merge) or none (create a new single-square block).  It cannot belong to any block to its right or above because those squares are not added yet.  It can belong to the block that contains the square below and/or the block that contains the square to its left, if colours of those squares match the current.  Either of these two blocks may not exist if the current square is in the bottom row, left column or if the column to the left is shorter (has fewer rows) than the current square's row.
+The code travels (builds) the grid as it is represented: up each column (along each list).  The grid is built square by square while the complete block list is updated at each iteration.  Each square can belong to one or two blocks that are already existing in the block list (merge) or none (create a new single-square block).  It cannot belong to any block to its right or above because those squares are not added yet.  It can belong to the block that contains the square below and/or the block that contains the square to its left, if colours of those squares match the current.  Either of these two blocks may not exist if the current square is in the bottom row, left column or if the column to the left is shorter (has fewer rows) than the current square's row.
 
 ### 3i. Remove a block from a grid
 
@@ -53,10 +56,10 @@ Take a block from the list described in 2. and remove it from the grid represent
 
 ### 3ii. Score a grid
 
-This I am fuzzy on.  I scored multi-square grids as 1 and single-square grids as 2 and got the best results for HackerRank's grids and some others I tried.  I played around with counting single-square grids worse and even indestructible grids as 0 (ones that have only squares that are matched with another square directly above or below it).  Nothing produced as good of results though I sometimes revisit when I get new ideas.
+This I am fuzzy on.  I scored multi-square blocks as 1 and single-square blocks as 2 and got the best results for HackerRank's grids and some others I tried.  I played around with counting single-square blocks worse and even indestructible blocks as 0 (ones that cannot be split apart such that any of its component squares would end up as a single-square block).  Nothing produced as good of results though I sometimes revisit when I get new ideas.
 
 ### Not quite all possibilities
 
-So the code only keeps a certain number of grids on each iteration.  These grids have 10x20 squares and so contain about 40 multi-square blocks.  Winning solutions take dozens of iterations to reduce the number of multi-square blocks even down to 30, and 50 or more moves to solve the grid.  There are obviously way too many paths to try!
+So the code only keeps a certain number of grids on each iteration.  The starting grids have 10x20 squares and so contain about 40 multi-square blocks.  Winning solutions take dozens of iterations to reduce the number of multi-square blocks down to 30, and 50 or more moves to solve the grid.  There are obviously way too many paths to try!
 
 
