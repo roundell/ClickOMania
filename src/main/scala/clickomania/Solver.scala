@@ -2,26 +2,26 @@ package clickomania
 
 trait Solver extends GameDef {
 
-  // addMove: with each Moves in the given MovesList, addMove removes all possible blocks, creating a new Moves for
-  //  each block removed, adding them all to the new MovesList (sorted) but de-duping along the way
+  // addMove: with each Moves in the given MovesList, addMove removes all possible groups, creating a new Moves for
+  //  each group removed, adding them all to the new MovesList (sorted) but de-duping along the way
   def addMove(movesList: MovesList, keep: Int): MovesList = {
 
     // Moves through each move in the original MovesList
     def addMoveMoves(movesList: MovesList, newMovesList: MovesList): MovesList = movesList match {
       case List() => newMovesList
-      case moves :: movesTail => addMoveMoves(movesTail, addMoveBlocks(moves, newMovesList))
+      case moves :: movesTail => addMoveMoves(movesTail, addMoveGroups(moves, newMovesList))
     }
 
-    // Creates the new Moves and adds them to the new MovesList by removing all possible blocks from this moves' grid
-    def addMoveBlocks(moves: Moves, newMovesList: MovesList): MovesList = {
+    // Creates the new Moves and adds them to the new MovesList by removing all possible groups from this moves' grid
+    def addMoveGroups(moves: Moves, newMovesList: MovesList): MovesList = {
 
-      def addMoveBlocks(gridBlocks: GridBlocks, newMovesList: MovesList): MovesList = gridBlocks match {
+      def addMoveGroups(gridGroups: GridGroups, newMovesList: MovesList): MovesList = gridGroups match {
         case List () => newMovesList
-        case block :: blockList =>
-          if (block.isSingleSquare) addMoveBlocks(blockList, newMovesList)
-          else addMoveBlocks(blockList, addMoves(moves.newMove(block), newMovesList, keep))
+        case group :: groupList =>
+          if (group.isSingleSquare) addMoveGroups(groupList, newMovesList)
+          else addMoveGroups(groupList, addMoves(moves.newMove(group), newMovesList, keep))
       }
-      addMoveBlocks(moves.grid.gridBlocks, newMovesList)
+      addMoveGroups(moves.grid.gridGroups, newMovesList)
     }
 
     addMoveMoves(movesList, List())

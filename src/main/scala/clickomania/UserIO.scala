@@ -52,22 +52,27 @@ trait UserIO extends GameDef with GridReader with GridLibrary {
       return false
     }
 
-    println("Select a multi-square block to remove")
+    println("The stats of the grid are: ")
+    println("         Score: " + grid.score)
+    println("       Singles: " + grid.score)
+    println("Indestructible: " + grid.score)
+    println(gridSquaresListtoString(grid.gridSquares))
+    println("Select a multi-square group to remove")
     println("Format: \"col row\"")
     val dimensions = scala.io.StdIn.readLine.split(" ")
     val col = dimensions(0).toInt
     val row = dimensions(1).toInt
 
-    val block = grid.findBlock(col, row)
+    val group = grid.findGroup(col, row)
 
-    if(block == null) {
+    if(group == null) {
       println("col row (" + col + " " + row + ") selection invalid")
       playAGrid(grid)
     }
-    else if(block.isSingleSquare) {
-      println("The block you selected is a single square")
+    else if(group.isSingleSquare) {
+      println("The group you selected is a single square")
       playAGrid(grid)
     }
-    else playAGrid(grid.removeBlock(block))
+    else playAGrid(grid.removeGroup(group))
   }
 }

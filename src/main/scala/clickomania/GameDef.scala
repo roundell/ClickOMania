@@ -2,30 +2,51 @@ package clickomania
 
 import scala.annotation.tailrec
 
-/* Home of the Block, Grid and Moves case classes + type definitions that help clarify */
+/* Home of the Group, Grid and Moves case classes + type definitions that help clarify */
 trait GameDef {
 
   type GridSquares = List[List[Char]] // representation of a grid as the individual squares
 
-  type GridBlocks = BlockList // representation of a grid as blocks
-  type BlockList = List[Block] // A list of blocks could be 1. entire grid as blocks or 2. could be sequence of blocks removed from a grid (moves)
-  type BlockSquares = List[(Int, List[Int])] // Squares are recorded by column then row: (c #, (r #s)), (c #2, (r #s)), ...
+  type GridGroups = GroupList // representation of a grid as groups
+  type GroupList = List[Group] // A list of groups could be 1. entire grid as groups or 2. could be sequence of groups removed from a grid (moves)
+  type GroupSquares = List[(Int, List[Int])] // Squares in groups are recorded by column then row: (c #, (r #s)), (c #2, (r #s)), ...
 
   type MovesList = List[Moves] // List of moves, which are each sequences sorted by final scores: lowest (best) score first
 
-  case class Block(colour: Char, blockSquares: BlockSquares) {
+  case class Group(colour: Char, groupSquares: GroupSquares) {
     lazy val isSingleSquare: Boolean = {
-      if (this.blockSquares.head._2.tail.isEmpty && this.blockSquares.tail.isEmpty) true
+      if (this.groupSquares.head._2.tail.isEmpty && this.groupSquares.tail.isEmpty) true
       else false
+    }
+    lazy val isIndestructible: Boolean = {
+      @tailrec
+      def columnsIndestructible(groupSquares: GroupSquares): Boolean = groupSquares match {
+        case List() => true
+        case col :: colList => rowsIndestructible(col._2.tail, col._2.head, (col._2.head == 0)) &&
+            columnsIndestructible(colList)
+      }
+      @tailrec
+      def rowsIndestructible(rows: List[Int], last: Int, matched: Boolean): Boolean = rows match {
+        case List() => matched
+        case 0 :: List() =>
+          if(matched || (last == 1)) true
+          else false
+        case row :: rowList =>
+          if(last - 1 == row) rowsIndestructible(rowList, row, true)
+          else if(matched) rowsIndestructible(rowList, row, false)
+          else false
+      }
+      columnsIndestructible(this.groupSquares)
     }
   }
 
   case class Grid(gridSquares: GridSquares) {
-    lazy val gridBlocks: GridBlocks = getGridBlocks(gridSquares) // representation of this grid as blocks
-    lazy val (score, unsolvable) = blockScoreList(gridBlocks) // unsolvable = false doesn't necessarily mean the grid is solvable
+    lazy val gridGroups: GridGroups = getGridGroups(gridSquares) // representation of this grid as groups
+    lazy val (score, unsolvable) = groupScoreList(gridGroups) // unsolvable = false doesn't necessarily mean the grid is solvable
+    //lazy val (singles, indestructible) = ???
 
     def equals(otherGrid: Grid): Boolean = {
-      if((score == otherGrid.score) && (gridBlocks == otherGrid.gridBlocks)) true
+      if((score == otherGrid.score) && (gridGroups == otherGrid.gridGroups)) true
       else false
     }
 
@@ -35,198 +56,201 @@ trait GameDef {
     }
 
     // This set of functions includes:
-    //  getBlockList, getBlockListRow, getBlockListColumn // functions to travel the grid square by square up the columns left to right
-    //  addSquare, addSquareHelper // functions to find the block(s) the square belongs to
-    //  makeListNewHoldTail, mergeTwoBlocksSquares, prependTwoLists // functions to add the squares to its block
-    // This function initializes the set of functions which will return a list of all the blocks that make up a grid
-    def getGridBlocks(gridSquares: GridSquares): GridBlocks = {
+    //  getGroupList, getGroupListRow, getGroupListColumn // functions to travel the grid square by square up the columns left to right
+    //  addSquare, addSquareHelper // functions to find the group(s) the square belongs to
+    //  makeListNewHoldTail, mergeTwoGroupsSquares, prependTwoLists // functions to add the squares to its group
+    // This function initializes the set of functions which will return a list of all the groups that make up a grid
+    def getGridGroups(gridSquares: GridSquares): GridGroups = {
 
       // This function chooses the next column from the grid, starting from left = column 0 and resetting row to bottom = 0
-      def getGBColumn(col: Int, gridSquares: GridSquares, gridBlocks: GridBlocks): GridBlocks = gridSquares match {
-        case List() => gridBlocks
-        case column :: gridTail => getGBColumn(col + 1, gridTail, getGBRow(col, 0, column, gridBlocks))
+      def getGBColumn(col: Int, gridSquares: GridSquares, gridGroups: GridGroups): GridGroups = gridSquares match {
+        case List() => gridGroups
+        case column :: gridTail => getGBColumn(col + 1, gridTail, getGBRow(col, 0, column, gridGroups))
       }
 
       // This function chooses the next square in the column (the next row up)
-      def getGBRow(col: Int, row: Int, column: List[Char], gridBlocks: GridBlocks): GridBlocks = column match {
-        case List() => gridBlocks
-        case ch :: chL => getGBRow(col, row + 1, chL, addSquare(Block(ch, List((col, List(row)))), gridBlocks))
+      def getGBRow(col: Int, row: Int, column: List[Char], gridGroups: GridGroups): GridGroups = column match {
+        case List() => gridGroups
+        case ch :: chL => getGBRow(col, row + 1, chL, addSquare(Group(ch, List((col, List(row)))), gridGroups))
       }
 
-      // Going to check first block as below and maybe left block, then addSquareFindLeft to look for left block if its not found here
-      def addSquare(block: Block, blockList: BlockList): BlockList = blockList match {
-        case List() => block :: blockList // empty blocklist so simply add single block
-        case b :: bL => {
-          val newCol = block.blockSquares.head._1
-          val newRow = block.blockSquares.head._2.head
-          val firstCol = b.blockSquares.head._1
-          val firstColRows = b.blockSquares.head._2
-          val secondCol = b.blockSquares.tail
+      // Going to check first group as below and maybe left group, then addSquareFindLeft to look for left group if its not found here
+      def addSquare(group: Group, groupList: GroupList): GroupList = groupList match {
+        case List() => group :: groupList // empty grouplist so simply add single group
+        case g :: gL => {
+          val newCol = group.groupSquares.head._1
+          val newRow = group.groupSquares.head._2.head
+          val firstCol = g.groupSquares.head._1
+          val firstColRows = g.groupSquares.head._2
+          val secondCol = g.groupSquares.tail
 
           val below = (newCol == firstCol) && (newRow - 1 == firstColRows.head)
           val left = ((newCol - 1 == firstCol) && firstColRows.contains(newRow) ||
               (secondCol.nonEmpty && (newCol -1 == secondCol.head._1) && secondCol.head._2.contains(newRow)))
 
-          if(left) // Found left so done, merge if same colour; doesn't matter if we found below block or not
-            if (block.colour == b.colour) mergeTwoBlocks(block, b) :: bL
-            else block :: blockList
-          else if(below && (block.colour == b.colour)) addSquareFindLeft(mergeTwoBlocks(block, b), bL, bL, List())
-          else addSquareFindLeft(block, blockList, bL, List(b)) // hold and go looking for the left block
+          if(left) // Found left so done, merge if same colour; doesn't matter if we found below group or not
+            if (group.colour == g.colour) mergeTwoGroups(group, g) :: gL
+            else group :: groupList
+          else if(below && (group.colour == g.colour)) addSquareFindLeft(mergeTwoGroups(group, g), gL, gL, List())
+          else addSquareFindLeft(group, groupList, gL, List(g)) // hold and go looking for the left group
         }
       }
 
-      // Already checked first block on list, going to check until finding the left block
-      def addSquareFindLeft(block: Block, blockList: BlockList, blockListTail: BlockList, holdBlocks: BlockList): BlockList = blockListTail match {
-        case List() => block :: blockList // empty blocklist -> block is in first column so left does not exist
-        case b :: bL => {
-          val newCol = block.blockSquares.head._1
-          val newRow = block.blockSquares.head._2.head
-          val firstCol = b.blockSquares.head._1
-          val firstColRows = b.blockSquares.head._2
-          val secondCol = b.blockSquares.tail
+      // Already checked first group on list, going to check until finding the left group
+      def addSquareFindLeft(group: Group, groupList: GroupList, groupListTail: GroupList, holdGroups: GroupList): GroupList = groupListTail match {
+        case List() => group :: groupList // empty groupList -> group is in first column so left does not exist
+        case g :: gL => {
+          val newCol = group.groupSquares.head._1
+          val newRow = group.groupSquares.head._2.head
+          val firstCol = g.groupSquares.head._1
+          val firstColRows = g.groupSquares.head._2
+          val secondCol = g.groupSquares.tail
 
           val done = (newCol - 1 > firstCol) || ((newCol - 1 == firstCol) && (newRow > firstColRows.head))
 
-          if(done) block :: blockList // column to the left is shorter than this block, left does not exist
+          if(done) group :: groupList // column to the left is shorter than this group, left does not exist
           else {
             val left = ((newCol - 1 == firstCol) && firstColRows.contains(newRow)) ||
               (secondCol.nonEmpty && (newCol - 1 == secondCol.head._1) && secondCol.head._2.contains(newRow))
 
             if (left)
-              if (block.colour == b.colour) mergeTwoBlocks(block, b) :: addBackHold(bL, holdBlocks)
-              else block :: blockList
-            else addSquareFindLeft(block, blockList, bL, b :: holdBlocks) // hold and go looking again
+              if (group.colour == g.colour) mergeTwoGroups(group, g) :: addBackHold(gL, holdGroups)
+              else group :: groupList
+            else addSquareFindLeft(group, groupList, gL, g :: holdGroups) // hold and go looking again
           }
         }
       }
 
-      def addBackHold(blockListTail: BlockList, holdBlocks: BlockList): BlockList = holdBlocks match {
-        case List() => blockListTail
-        case b :: bL => addBackHold(b :: blockListTail, bL)
+      def addBackHold(groupListTail: GroupList, holdGroups: GroupList): GroupList = holdGroups match {
+        case List() => groupListTail
+        case g :: gL => addBackHold(g :: groupListTail, gL)
       }
 
-      def mergeTwoBlocks(b1: Block, b2: Block): Block = Block(b1.colour, mergeTwoBlocksSquares(b1.blockSquares, b2.blockSquares))
+      def mergeTwoGroups(g1: Group, g2: Group): Group = Group(g1.colour, mergeTwoGroupsSquares(g1.groupSquares, g2.groupSquares))
 
-      // This function merges two BlockSquares (list of squares that make up a block) into one
-      def mergeTwoBlocksSquares(bs1: BlockSquares, bs2: BlockSquares): BlockSquares = (bs1, bs2) match {
+      // This function merges two GroupSquares (list of squares that make up a group) into one
+      def mergeTwoGroupsSquares(gs1: GroupSquares, gs2: GroupSquares): GroupSquares = (gs1, gs2) match {
         case (List(), List()) => List()
-        case (List(), bs) => bs
-        case (bs, List()) => bs
-        case ((col1, rows1) :: bsTail1, (col2, rows2) :: bsTail2) => {
-          if (col1 == col2) (col1, mergeTwoBlocksColumns(rows1, rows2)) :: mergeTwoBlocksSquares(bsTail1, bsTail2)
-          else (col1, rows1) :: mergeTwoBlocksSquares(bsTail1, bs2)
-            // the else catchall is for below block maybe having an extra column on the right
+        case (List(), gs) => gs
+        case (gs, List()) => gs
+        case ((col1, rows1) :: gsTail1, (col2, rows2) :: gsTail2) => {
+          if (col1 == col2) (col1, mergeTwoGroupsColumns(rows1, rows2)) :: mergeTwoGroupsSquares(gsTail1, gsTail2)
+          else (col1, rows1) :: mergeTwoGroupsSquares(gsTail1, gs2)
+            // the else catchall is for below group maybe having an extra column on the right
         }
       }
 
-      def mergeTwoBlocksColumns(rows1: List[Int], rows2: List[Int]): List[Int] = (rows1, rows2) match {
+      def mergeTwoGroupsColumns(rows1: List[Int], rows2: List[Int]): List[Int] = (rows1, rows2) match {
         case (List(), List()) => List()
         case (List(), row) => row
         case (row, List()) => row
         case ((row1 :: rest1), (row2 :: rest2)) =>
-          if(row1 < row2) row2 :: mergeTwoBlocksColumns(rows1, rest2)
-          else row1 :: mergeTwoBlocksColumns(rest1, rows2)
+          if(row1 < row2) row2 :: mergeTwoGroupsColumns(rows1, rest2)
+          else row1 :: mergeTwoGroupsColumns(rest1, rows2)
       }
 
       getGBColumn(0, gridSquares, List())
     }
 
-    // Scores the grid: lowest is best; 1 point for multi-square block and 2 for single-square block
-    def blockScoreList(blockList: BlockList): (Int, Boolean) = {
-      def blockScoreListHelper(blockList: BlockList, colourSafe: Map[Char, Int], score: Int): (Int, Boolean) = blockList match {
+    // Scores the grid: lowest is best; 1 point for multi-square group and 2 for single-square group
+    def groupScoreList(groupList: GroupList): (Int, Boolean) = {
+      def groupScoreListHelper(groupList: GroupList, colourSafe: Map[Char, Int], score: Int): (Int, Boolean) = groupList match {
         case List() => {
           val unSafe = colourSafe.foldLeft(0)(_ + _._2)
           (score + (100 * unSafe), if(unSafe > 0) true else false)
         }
-        case b :: bl =>
-          if (b.isSingleSquare) { // single square is worst
-            if (colourSafe.contains(b.colour))
-              blockScoreListHelper(bl, colourSafe + (b.colour -> 0), score + 2)
+        case g :: bl =>
+          if (g.isSingleSquare) { // single square is worst
+            if (colourSafe.contains(g.colour))
+              groupScoreListHelper(bl, colourSafe + (g.colour -> 0), score + 2)
             else
-              blockScoreListHelper(bl, colourSafe + (b.colour -> 1), score + 2)
+              groupScoreListHelper(bl, colourSafe + (g.colour -> 1), score + 2)
           }
-          else blockScoreListHelper(bl, colourSafe + (b.colour -> 0), score + 1) // multi column block aint so bad
+          //else if(b.isIndestructible)
+          //  groupScoreListHelper(bl, colourSafe + (b.colour -> 0), score + 1) // indestructible groups score 0
+          else
+            groupScoreListHelper(bl, colourSafe + (g.colour -> 0), score + 1) // multi column group aint so bad
       }
-      blockScoreListHelper(blockList, Map(), 0)
+      groupScoreListHelper(groupList, Map(), 0)
     }
 
-    def findBlock(col: Int, row: Int): Block = {
+    def findGroup(col: Int, row: Int): Group = {
       @tailrec
-      def findBlock(gridBlocks: GridBlocks): Block = gridBlocks match {
+      def findGroup(gridGroups: GridGroups): Group = gridGroups match {
         case List() => null
-        case block :: blockList =>
-          if(isBlockCol(block.blockSquares)) block
-          else findBlock(blockList)
+        case group :: groupList =>
+          if(isGroupCol(group.groupSquares)) group
+          else findGroup(groupList)
       }
       @tailrec
-      def isBlockCol(blockSquares: BlockSquares): Boolean = blockSquares match {
+      def isGroupCol(groupSquares: GroupSquares): Boolean = groupSquares match {
         case List() => false
         case column :: colList =>
           if((col == column._1) && column._2.contains(row)) true
-          else isBlockCol(colList)
+          else isGroupCol(colList)
       }
-      findBlock(this.gridBlocks)
+      findGroup(this.gridGroups)
     }
 
-    //  Remove the block's squares from the grid
-    //      >> BlockSquares are saved by column highest to lowest, then by row highest to lowest
+    //  Remove the group's squares from the grid
+    //      >> GroupSquares are saved by column highest to lowest, then by row highest to lowest
     //      >> GridSquares are saved column lowest to highest, then row lowest to highest
-    //            >> Therefore: reverse the block's columns and then each list of rows to match the GridSquares
-    def removeBlock(block: Block): Grid = {
-      Grid(removeBlockGetColumn(this.gridSquares, block.blockSquares.reverse, 0))
+    //            >> Therefore: reverse the group's columns and then each list of rows to match the GridSquares
+    def removeGroup(group: Group): Grid = {
+      Grid(removeGroupGetColumn(this.gridSquares, group.groupSquares.reverse, 0))
     }
-    def removeMoves(moves: BlockList): Grid = {
-      def removeMove(gridColumns: GridSquares, moves: BlockList): GridSquares = moves match {
+    def removeMoves(moves: GroupList): Grid = {
+      def removeMove(gridColumns: GridSquares, moves: GroupList): GridSquares = moves match {
         case List () => gridColumns
-        case block :: blockList => removeMove(removeBlockGetColumn(gridColumns, block.blockSquares.reverse, 0), blockList)
+        case group :: groupList => removeMove(removeGroupGetColumn(gridColumns, group.groupSquares.reverse, 0), groupList)
       }
       Grid(removeMove(this.gridSquares, moves))
     }
 
-    def removeBlockGetColumn(gridColumns: GridSquares, blockSquares: BlockSquares, colNumber: Int): GridSquares = gridColumns match {
+    def removeGroupGetColumn(gridColumns: GridSquares, groupSquares: GroupSquares, colNumber: Int): GridSquares = gridColumns match {
       case List() => List()
       case gridCol :: gridColList => {
-        if (blockSquares.isEmpty) gridColumns
-        else if (blockSquares.head._1 == colNumber) {
-          val newGridColumn = removeRowsFromColumn(gridCol, blockSquares.head._2.reverse, 0)
-          if (newGridColumn.isEmpty) removeBlockGetColumn(gridColList, blockSquares.tail, colNumber + 1)
-          else newGridColumn :: removeBlockGetColumn(gridColList, blockSquares.tail, colNumber + 1)
+        if (groupSquares.isEmpty) gridColumns
+        else if (groupSquares.head._1 == colNumber) {
+          val newGridColumn = removeRowsFromColumn(gridCol, groupSquares.head._2.reverse, 0)
+          if (newGridColumn.isEmpty) removeGroupGetColumn(gridColList, groupSquares.tail, colNumber + 1)
+          else newGridColumn :: removeGroupGetColumn(gridColList, groupSquares.tail, colNumber + 1)
         }
-        else gridCol :: removeBlockGetColumn(gridColList, blockSquares, colNumber + 1)
+        else gridCol :: removeGroupGetColumn(gridColList, groupSquares, colNumber + 1)
       }
     }
 
-    def removeRowsFromColumn(gridRows: List[Char], blockRows: List[Int], rowNumber: Int): List[Char] = gridRows match {
+    def removeRowsFromColumn(gridRows: List[Char], groupRows: List[Int], rowNumber: Int): List[Char] = gridRows match {
       case List() => List()
       case square :: rowsTail => {
-        if (blockRows.isEmpty) gridRows
-        else if (blockRows.head == rowNumber) removeRowsFromColumn(rowsTail, blockRows.tail, rowNumber + 1)
-        else square :: removeRowsFromColumn(rowsTail, blockRows, rowNumber + 1)
+        if (groupRows.isEmpty) gridRows
+        else if (groupRows.head == rowNumber) removeRowsFromColumn(rowsTail, groupRows.tail, rowNumber + 1)
+        else square :: removeRowsFromColumn(rowsTail, groupRows, rowNumber + 1)
       }
     }
 
     def createMovesList(keep: Int): MovesList = {
-      def createMovesList(gridBlocks: GridBlocks): MovesList = gridBlocks match {
+      def createMovesList(gridGroups: GridGroups): MovesList = gridGroups match {
         case List() => List()
-        case block :: blockList =>
-          if(block.isSingleSquare) createMovesList(blockList)
-          else addMoves(Moves(this.removeBlock(block), block, List(block)), createMovesList(blockList), keep)
+        case group :: groupList =>
+          if(group.isSingleSquare) createMovesList(groupList)
+          else addMoves(Moves(this.removeGroup(group), group, List(group)), createMovesList(groupList), keep)
       }
-      createMovesList(this.gridBlocks)
+      createMovesList(this.gridGroups)
     }
   }
 
-  // Moves: grid is the current grid after the moveList of blocks was removed from the original grid.
+  // Moves: grid is the current grid after the moveList of groups was removed from the original grid.
   // firstMove was the first move and is also the first entry in the moveList
-  case class Moves(grid: Grid, firstMove: Block, moveList: BlockList) {
+  case class Moves(grid: Grid, firstMove: Group, moveList: GroupList) {
 
-    def newMove(removeBlock: Block): Moves = Moves(grid.removeBlock(removeBlock), firstMove, removeBlock :: moveList)
+    def newMove(removeGroup: Group): Moves = Moves(grid.removeGroup(removeGroup), firstMove, removeGroup :: moveList)
 
     def equals(otherMoves: Moves): Boolean = grid.equals(otherMoves.grid)
     def lessThan(otherMoves: Moves): Boolean = grid.lessThan(otherMoves.grid)
 
     override def toString: String = {
-      "\n" + "Moves Score: " + this.grid.score + "\n" + "Grid: " + this.grid.gridBlocks + "\n" +
+      "\n" + "Moves Score: " + this.grid.score + "\n" + "Grid: " + this.grid.gridGroups + "\n" +
         "  First Move: " + this.firstMove + "\n" + "  Move List: " + this.moveList + "\n"
     }
   }

@@ -21,10 +21,10 @@ class SolverTest extends Solver with GridLibrary {
     val movesList6Moves = addMove(movesList5Moves, 50) // 15 (including a score of 0)
 
     assert(movesList.length == 4, "The movesList should have length 4: " + movesList)
-    assert(movesList.head.grid.score == 5, "The red block should be first (lowest score): " + movesList)
+    assert(movesList.head.grid.score == 5, "The red group should be first (lowest score): " + movesList)
 
     assert(movesList3.length == 3, "The movesList should now have length 3: " + movesList3)
-    assert(movesList3.head.grid.score == 5, "The red block should still be first: " + movesList3)
+    assert(movesList3.head.grid.score == 5, "The red group should still be first: " + movesList3)
 
     assert(movesList2Moves.head.moveList.length == 2, "All of the Moves should have two moves: " + movesList2Moves)
     assert(movesList3Moves.head.moveList.length == 3, "All of the Moves should have three moves: " + movesList3Moves)
@@ -33,7 +33,7 @@ class SolverTest extends Solver with GridLibrary {
     assert(movesList6Moves.head.moveList.length == 6, "All of the Moves should have six moves: " + movesList6Moves)
     assert(movesList6Moves.head.grid.score == 0, "The grid should be solved after six moves: " + movesList6Moves)
   }
-/*
+
   @Test def `Solver Moves: solve a small grid using findBestMove`(): Unit = {
     val grid = Grid(List(List('B', 'B', 'B', 'O', 'B'), List('B', 'C', 'C', 'O', 'B', 'B', 'B', 'B'),
       List('B', 'P', 'R', 'P', 'B', 'B'), List('B', 'Y', 'R', 'Y', 'B'), List('B', 'B', 'B', 'B', 'B')))
@@ -56,7 +56,7 @@ class SolverTest extends Solver with GridLibrary {
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 10s: " + movesListFinal)
   }
-
+/*
   @Test def `Solver Moves: solve a large 5-colour grid using findBestMove`(): Unit = {
     val grid = Grid(gridLibrary(5))
 
@@ -67,7 +67,7 @@ class SolverTest extends Solver with GridLibrary {
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 10s: " + movesListFinal)
   }
-*/
+
   @Test def `Solver Moves: solve a large 6-colour grid using findBestMove`(): Unit = {
     val grid = Grid(gridLibrary(610))
 
@@ -77,5 +77,5 @@ class SolverTest extends Solver with GridLibrary {
     val movesListFinal = findBestMove(movesList, time, 100000000000L, 800)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 40s: ") // + movesListFinal)
-  }
+  }*/
 }
