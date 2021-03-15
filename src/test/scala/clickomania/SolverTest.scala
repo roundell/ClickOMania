@@ -37,45 +37,29 @@ class SolverTest extends Solver with GridLibrary {
   @Test def `Solver Moves: solve a small grid using findBestMove`(): Unit = {
     val grid = Grid(List(List('B', 'B', 'B', 'O', 'B'), List('B', 'C', 'C', 'O', 'B', 'B', 'B', 'B'),
       List('B', 'P', 'R', 'P', 'B', 'B'), List('B', 'Y', 'R', 'Y', 'B'), List('B', 'B', 'B', 'B', 'B')))
-
-    val time = System.nanoTime()
-    val movesList = grid.createMovesList(50)
-
-    val movesListFinal = findBestMove(movesList, time, 10000000000L, 100)
+    val movesListFinal = findBestMove(grid, 10000000000L, 100)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 1s: " + movesListFinal)
   }
-
+/*
   @Test def `Solver Moves: solve a large 2-colour grid using findBestMove`(): Unit = {
     val grid = Grid(gridLibrary(2))
-
-    val time = System.nanoTime()
-    val movesList = grid.createMovesList(50)
-
-    val movesListFinal = findBestMove(movesList, time, 10000000000L, 100)
+    val movesListFinal = findBestMove(grid, 10000000000L, 100)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 10s: " + movesListFinal)
   }
-/*
+
   @Test def `Solver Moves: solve a large 5-colour grid using findBestMove`(): Unit = {
     val grid = Grid(gridLibrary(5))
-
-    val time = System.nanoTime()
-    val movesList = grid.createMovesList(50)
-
-    val movesListFinal = findBestMove(movesList, time, 10000000000L, 150)
+    val movesListFinal = findBestMove(grid, 10000000000L, 150)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 10s: " + movesListFinal)
-  }
+  }*/
 
   @Test def `Solver Moves: solve a large 6-colour grid using findBestMove`(): Unit = {
     val grid = Grid(gridLibrary(610))
-
-    val time = System.nanoTime()
-    val movesList = grid.createMovesList(50)
-
-    val movesListFinal = findBestMove(movesList, time, 100000000000L, 800)
+    val movesListFinal = findBestMove(grid, 120000000000L, 1000)
 
     assert(movesListFinal.head.grid.score == 0, "findBestMove should solve the grid within 40s: ") // + movesListFinal)
-  }*/
+  }
 }

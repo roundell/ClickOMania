@@ -24,45 +24,52 @@ trait Solver extends GameDef {
       addMoveGroups(moves.grid.gridGroups, newMovesList)
     }
 
-    addMoveMoves(movesList, List())
+    addMoveMoves(movesList.reverse, List())
   }
 
   // recursive method that checks score and timelimit on each iteration to see if it can solve the grid
-  def findBestMove(movesList: MovesList, time: Long, timeLimit: Long, keep: Int): MovesList = {
-    val now = System.nanoTime()
-    val iterationTime = now - time
-    val timeLeft = timeLimit - iterationTime
+  def findBestMove(grid: Grid, timeLimit: Long, keep: Int): MovesList = {
+    val startTime = System.nanoTime()
 
-    println("Iteration Time: " + iterationTime)
-    println("     Time Left: " + timeLeft)
-    if(movesList.nonEmpty) {
-      println("     Top Score     " + movesList.head.grid.score)
-      println("     Last Score    " + movesList.last.grid.score)
-      println("     Moves in List " + movesList.length)
-    }
+    def findBestMoveHelper(movesList: MovesList, last: Long, counter: Int): MovesList = {
+      val startTimeIteration = System.nanoTime()
+      val iterationTime = startTimeIteration - last
+      val totalTime = startTimeIteration - startTime
 
-    if(movesList.isEmpty) {
-      println("Ran out of moves to make")
-      //print(movesList)
-      movesList
+      val iterationTimeFormatted = iterationTime.toFloat / 1000000000
+      val totalTimeFormatted = totalTime.toFloat / 1000000000
+      println(f"Iteration Time: $iterationTimeFormatted%2.3fs")
+      println(f"    Total Time: $totalTimeFormatted%2.3fs")
+      println(f"     Iteration: " + counter)
+
+      if(movesList.nonEmpty) {
+        println("     Top Score     " + movesList.head.grid.score)
+        println("     Last Score    " + movesList.last.grid.score)
+        println("     Moves in List " + movesList.length)
+      }
+
+
+      if (movesList.isEmpty) {
+        println("Ran out of moves to make")
+        //print(movesList)
+        movesList
+      }
+      else if (movesList.head.grid.score == 0) {
+        println("Solved the Grid in " + counter + " moves!")
+        println(movesList.head.moveList)
+        movesList
+      }
+      else if (totalTime > timeLimit) {
+        println("Time ran out!")
+        //print(movesList)
+        movesList
+      }
+      else findBestMoveHelper(addMove(movesList, keep), startTimeIteration, counter + 1)
     }
-    else if(movesList.head.grid.score == 0) {
-      println("Solved the Grid!")
-      movesList
-    }
-    else if(timeLeft < 0) {
-      println("Time ran out!")
-      //print(movesList)
-      movesList
-    }
-    else findBestMove(addMove(movesList, keep), now, timeLeft, keep)
+    findBestMoveHelper(grid.createMovesList(50), startTime, 0)
   }
 
   def solveGrid(gridSquares: GridSquares): Moves = {
-    val grid = Grid(gridSquares)
-    val time = System.nanoTime()
-    val movesList = grid.createMovesList(50)
-
-    findBestMove(movesList, time, 1000000000, 150).head
+    findBestMove(Grid(gridSquares), 1000000000, 150).head
   }
 }

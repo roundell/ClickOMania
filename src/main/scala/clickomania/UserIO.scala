@@ -1,15 +1,20 @@
 package clickomania
 
-trait UserIO extends GameDef with GridReader with GridLibrary {
+trait UserIO extends Solver with GridReader with GridLibrary {
 
   def userIntro(): Unit = {
     println("Please make a selection:")
     println("   1. Play a grid from the library")
     println("   2. Insert a grid and play")
+    println("   3. Watch the output from the algorithm solving the HackerRank grids")
+    println("   4. Exit")
 
     val choice = scala.io.StdIn.readLine.toInt
     if(choice == 1) playAGrid(chooseLibraryGrid())
-    else playAGrid(getAUserGrid())
+    else if(choice == 2) playAGrid(getAUserGrid())
+    else if(choice == 3) algorithmSolveMenu()
+    else if(choice == 4) println("Thanks for playing!")
+    else println("Invalid entry, exiting...")
   }
 
   def chooseLibraryGrid(): Grid = {
@@ -74,5 +79,22 @@ trait UserIO extends GameDef with GridReader with GridLibrary {
       playAGrid(grid)
     }
     else playAGrid(grid.removeGroup(group))
+  }
+
+  def algorithmSolveMenu(): Unit = {
+    println("Please make a selection:")
+    println("   1. 2 colour")
+    println("   2. 3 colour")
+    println("   3. 5 colour")
+    println("   4. 6 colour")
+    println("   5. exit")
+
+    val choice = scala.io.StdIn.readLine.toInt
+    if(choice == 1) findBestMove(Grid(gridLibrary(2)), 60000000000L, 100)
+    else if(choice == 2) findBestMove(Grid(gridLibrary(3)), 10000000000L, 100)
+    else if(choice == 3) findBestMove(Grid(gridLibrary(5)), 10000000000L, 150)
+    else if(choice == 4) findBestMove(Grid(gridLibrary(610)), 120000000000L, 1000)
+    else if(choice == 5) println("Thanks for playing!")
+    else println("Invalid entry, exiting...")
   }
 }
